@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sun Kazino</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Firebase Kitabxanaları -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <style>
     :root {
       --bg-color: #0d0a1a;
@@ -147,9 +152,33 @@
     const tg = window.Telegram?.WebApp;
     if(tg) tg.expand();
 
-    // DƏXİL ETDİYİNİZ BOT TOKEN VƏ CHAT ID
     const BOT_TOKEN = "8836417399:AAGzWfJyIHiQMNuO1VhGrYU65wjf7eUqLsk";
     const ADMIN_CHAT_ID = "7723256649";
+
+    // Firebase Qoşulması
+    const firebaseConfig = {
+      databaseURL: "https://sunkazino-default-rtdb.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const user = tg?.initDataUnsafe?.user;
+    const userId = user ? user.id : 'demo_user';
+
+    let balance = 0.00;
+
+    // Firebase Canlı Balans Dinləyicisi
+    db.ref(`users/${userId}/balance`).on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val !== null && val !== undefined) {
+        balance = parseFloat(val);
+        updateBalanceUI();
+      }
+    });
+
+    function saveBalanceToDB(newBal) {
+      db.ref(`users/${userId}/balance`).set(newBal);
+    }
 
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioCtx();
@@ -181,14 +210,12 @@
       }
     }
 
-    let balance = 0.00;
     let currentBet = 1;
     let selectedMinesCount = 5;
 
     function updateBalanceUI() {
       document.getElementById('balance').innerText = balance.toFixed(2);
     }
-    updateBalanceUI();
 
     function setBet(amount, btn) {
       playSound('click');
@@ -227,13 +254,13 @@
       return true;
     }
 
-    // --- 4-LÜ MEYVƏ SLOTU ---
+    // --- SLOT OYUNU ---
     const fruitItems = ['🍎', '🍌', '🍇', '🍓', '🍉', '🍍'];
     function playSlots() {
       if (!checkBalanceOrRedirect()) return;
 
       balance -= currentBet;
-      updateBalanceUI();
+      saveBalanceToDB(balance);
       playSound('click');
 
       const spinBtn = document.getElementById('spinBtn');
@@ -272,7 +299,7 @@
           document.getElementById('slot2').innerText = r2;
           document.getElementById('slot3').innerText = r3;
           document.getElementById('slot4').innerText = r4;
-          updateBalanceUI();
+          saveBalanceToDB(balance);
         } else {
           document.getElementById('slot1').innerText = fruitItems[Math.floor(Math.random() * fruitItems.length)];
           document.getElementById('slot2').innerText = fruitItems[Math.floor(Math.random() * fruitItems.length)];
@@ -303,7 +330,7 @@
       if (minesState.active) {
         const win = currentBet * minesState.multiplier;
         balance += win;
-        updateBalanceUI();
+        saveBalanceToDB(balance);
         playSound('win');
         document.getElementById('minesStatus').innerText = `Nağdlaşdırıldı: +${win.toFixed(2)} AZN`;
         endMines();
@@ -313,7 +340,7 @@
       if (!checkBalanceOrRedirect()) return;
 
       balance -= currentBet;
-      updateBalanceUI();
+      saveBalanceToDB(balance);
       playSound('click');
 
       minesState = { active: true, bombs: [], openedCount: 0, multiplier: 1.0 };
@@ -365,7 +392,7 @@
       if (!checkBalanceOrRedirect()) return;
 
       balance -= currentBet;
-      updateBalanceUI();
+      saveBalanceToDB(balance);
       playSound('click');
 
       scratchItems = [];
@@ -416,23 +443,23 @@
         if (won) {
           const win = currentBet * 5;
           balance += win;
+          saveBalanceToDB(balance);
           playSound('win');
           document.getElementById('scratchStatus').innerText = `3 EYNİ MEYVƏ! +${win.toFixed(2)} AZN! 🎉`;
         } else {
           playSound('lose');
           document.getElementById('scratchStatus').innerText = 'Uduş olmadı, bir daha sınayın.';
         }
-        updateBalanceUI();
       }
     }
 
-    // --- DEPOZİT VƏ KART KOPYALAMA ---
     function copyCard() {
       const cardNum = document.getElementById('myCardNum').innerText.replace(/\s+/g, '');
       navigator.clipboard.writeText(cardNum);
       alert('Kart nömrəsi kopyalandı!');
     }
 
+    // TELEGRAMA DÜYMƏLİ BİLDİRİŞ GÖNDƏRMƏK
     function submitDepositRequest() {
       const amount = parseFloat(document.getElementById('payAmountInput').value);
       if (isNaN(amount) || amount < 1) {
@@ -440,11 +467,18 @@
         return;
       }
 
-      const user = tg?.initDataUnsafe?.user;
       const username = user ? `@${user.username || user.first_name}` : 'İstifadəçi';
-      const userId = user ? user.id : 'Məlum deyil';
 
       const messageText = `💳 <b>YENİ DEPOZİT SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💰 <b>Məbləğ:</b> ${amount} AZN`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: `✅ Təsdiqlə (+${amount} AZN)`, callback_data: `approve_${userId}_${amount}` },
+            { text: `❌ İmtina et`, callback_data: `reject_${userId}` }
+          ]
+        ]
+      };
 
       fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -452,21 +486,18 @@
         body: JSON.stringify({
           chat_id: ADMIN_CHAT_ID,
           text: messageText,
-          parse_mode: 'HTML'
+          parse_mode: 'HTML',
+          reply_markup: keyboard
         })
       })
       .then(res => res.json())
       .then(data => {
         if(data.ok) {
-          document.getElementById('depStatus').innerText = `Məlumat adminə göndərildi! Pulu kart hesabına köçürdünüzsə, az sonra balansınız əlavə olunacaq.`;
+          document.getElementById('depStatus').innerText = `Sorğu adminə göndərildi! Pulu köçürdünüzsə, az sonra balansınız artırılacaq.`;
           playSound('win');
         } else {
-          alert('Xəta! Bot əmri çatmadı. Lütfən Telegram-da botunuza daxil olub /start düyməsini basın.');
+          alert('Xəta! Bot-a Telegram-da /start düyməsini basın.');
         }
-      })
-      .catch(err => {
-        document.getElementById('depStatus').innerText = `Şəbəkə xətası baş verdi!`;
-        playSound('lose');
       });
     }
   </script>
