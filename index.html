@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="az">
 <head>
@@ -30,7 +29,7 @@
     .balance-box span { color: var(--accent-gold); font-size: 17px; }
 
     .tabs { display: flex; gap: 4px; width: 100%; max-width: 420px; margin-bottom: 12px; }
-    .tab-btn { flex: 1; padding: 10px 2px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .tab-btn { flex: 1; padding: 8px 2px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 10px; font-size: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
     .tab-btn.active { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border-color: var(--accent-gold); }
 
     .view { display: none; width: 100%; max-width: 420px; background: var(--card-bg); border-radius: 18px; padding: 15px; border: 1px solid rgba(255,215,0,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
@@ -86,9 +85,10 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slot</button>
     <button class="tab-btn" onclick="switchTab('mines')">💣 Mina</button>
-    <button class="tab-btn" onclick="switchTab('scratch')">🎟️ Poz Qazan</button>
+    <button class="tab-btn" onclick="switchTab('scratch')">🎟️ Poz</button>
     <button class="tab-btn" onclick="switchTab('deposit')">💳 Depozit</button>
     <button class="tab-btn" onclick="switchTab('withdraw')">💸 Çıxarış</button>
+    <button class="tab-btn" onclick="switchTab('support')">💬 Dəstək</button>
   </div>
 
   <div class="bet-control" id="betControlSection">
@@ -181,6 +181,23 @@
     <div class="status-msg" id="withdrawStatus"></div>
   </div>
 
+  <!-- 7/24 DƏSTƏK -->
+  <div class="view" id="supportView">
+    <div style="font-size:13px; color:#ccc; margin-bottom:12px; line-height:1.4;">
+      🎧 <b>7/24 Canlı Dəstək Xidməti</b><br>Suallarınızı və ya yarandığı halda depozit/çıxarış problemlərinizi dərhal göndərin.
+    </div>
+
+    <div style="width:100%; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Mesajınız:</div>
+    <textarea id="supportMsgInput" placeholder="Probleminizi və ya sualınızı bura yazın..." rows="4" style="width:100%; padding:12px; background:#0a0814; border:1px solid var(--accent-gold); border-radius:8px; color:#fff; font-size:14px; margin-bottom:12px; outline:none; resize:none;"></textarea>
+
+    <button class="action-btn" style="background:linear-gradient(135deg, #3742fa, #5352ed); color:#fff; margin-bottom:12px;" onclick="submitSupportRequest()">MESAJI GÖNDƏR</button>
+
+    <div style="font-size:12px; color:#888; margin-bottom:8px;">və ya birbaşa Telegram meneceri ilə əlaqə saxlayın:</div>
+    <button class="action-btn" style="background:rgba(255,255,255,0.08); border:1px solid var(--accent-gold); color:var(--accent-gold); font-size:14px; padding:10px;" onclick="openTelegramAdmin()">💬 Telegram Menecerə Yaz</button>
+
+    <div class="status-msg" id="supportStatus"></div>
+  </div>
+
   <script>
     const tg = window.Telegram?.WebApp;
     if(tg) {
@@ -190,6 +207,7 @@
 
     const BOT_TOKEN = "8836417399:AAHySYind-48Td8EvxW3-i-WLTwxE-ey5so";
     const ADMIN_CHAT_ID = "7723256649";
+    const ADMIN_USERNAME = "admin_username"; // Öz Telegram istifadəçi adınızı bura yaza bilərsiniz (məsələn: sun_kazino_admin)
 
     const firebaseConfig = {
       databaseURL: "https://sunkazino-default-rtdb.firebaseio.com"
@@ -606,7 +624,6 @@
         return;
       }
 
-      // Balansdan məbləğ çıxılır və verilənlər bazasına yazılır
       balance -= amount;
       saveBalanceToDB(balance);
 
@@ -646,7 +663,49 @@
         alert('Şəbəkə xətası baş verdi.');
       });
     }
+
+    /* --- 7/24 DƏSTƏK SİSTEMİ --- */
+    function submitSupportRequest() {
+      const msg = document.getElementById('supportMsgInput').value.trim();
+      if (!msg) {
+        alert('Lütfən mesajınızı daxil edin!');
+        return;
+      }
+
+      const username = user?.username ? `@${user.username}` : (user?.first_name || 'İstifadəçi');
+      const messageText = `💬 <b>YENİ DƏSTƏK SORĞUSU (7/24)</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n📝 <b>Mesaj:</b>\n${msg}`;
+
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.ok) {
+          document.getElementById('supportStatus').innerText = `Mesajınız adminə göndərildi! Qısa zamanda sizinlə əlaqə saxlanılacaq.`;
+          playSound('win');
+          document.getElementById('supportMsgInput').value = '';
+        } else {
+          alert('Xəta baş verdi! Bot-a /start düyməsini basdığınızdan əmin olun.');
+        }
+      })
+      .catch(err => {
+        alert('Şəbəkə xətası baş verdi.');
+      });
+    }
+
+    function openTelegramAdmin() {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(`https://t.me/${ADMIN_USERNAME}`);
+      } else {
+        window.open(`https://t.me/${ADMIN_USERNAME}`, '_blank');
+      }
+    }
   </script>
 </body>
 </html>
-
