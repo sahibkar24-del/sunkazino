@@ -1,3 +1,153 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sun Kazino</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Firebase Kitabxanaları -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0d0a1a;
+      --card-bg: #17132b;
+      --accent-gold: #ffd700;
+      --accent-orange: #ff8c00;
+      --text-color: #ffffff;
+      --green-btn: #2ed573;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; user-select: none; }
+    body { background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; text-align: center; }
+
+    header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .logo { font-size: 22px; font-weight: bold; color: var(--accent-gold); text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+    .balance-box { background: var(--card-bg); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 6px 16px; font-size: 16px; font-weight: bold; }
+    .balance-box span { color: var(--accent-gold); font-size: 18px; }
+
+    .tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; margin-bottom: 15px; }
+    .tab-btn { flex: 1; padding: 10px 4px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .tab-btn.active { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border-color: var(--accent-gold); }
+
+    .view { display: none; width: 100%; max-width: 420px; background: var(--card-bg); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,215,0,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .view.active { display: flex; flex-direction: column; align-items: center; }
+
+    .bet-control { margin-bottom: 15px; width: 100%; }
+    .bet-title { font-size: 13px; color: #888; margin-bottom: 6px; }
+    .bet-btns { display: flex; gap: 6px; justify-content: center; }
+    .bet-btn { flex: 1; padding: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .bet-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.1); }
+
+    .slots-container { display: flex; gap: 6px; margin: 20px 0; width: 100%; justify-content: center; }
+    .slot { width: 70px; height: 90px; background: #0a0814; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 34px; border: 2px solid var(--accent-gold); }
+
+    .mines-config { width: 100%; margin-bottom: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
+    .mine-count-btns { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; justify-content: center; }
+    .mine-count-btn { flex: 1; min-width: 50px; padding: 6px 2px; background: #0a0814; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 11px; cursor: pointer; }
+    .mine-count-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.15); }
+
+    .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; margin: 15px 0; }
+    .mine-card { aspect-ratio: 1; background: #0a0814; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
+    .mine-card.revealed { background: #252042; }
+
+    .scratch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 240px; margin: 15px 0; }
+    .scratch-card { width: 70px; height: 70px; background: linear-gradient(135deg, #444, #222); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; border: 1px solid var(--accent-gold); }
+    .scratch-card.revealed { background: #0a0814; }
+
+    .action-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border: none; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,140,0,0.3); transition: 0.1s; margin-top: 10px; }
+    .action-btn:active { transform: scale(0.98); }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .status-msg { margin-top: 12px; font-size: 15px; min-height: 20px; font-weight: 500; }
+
+    .deposit-card-box { width: 100%; background: #100b21; border: 2px dashed var(--accent-gold); border-radius: 14px; padding: 15px; margin-bottom: 15px; text-align: center; }
+    .card-number-display { font-size: 20px; font-weight: bold; color: var(--accent-gold); letter-spacing: 2px; margin: 10px 0; background: rgba(255,215,0,0.1); padding: 10px; border-radius: 8px; }
+    .copy-btn { background: var(--accent-orange); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">☀️ SUN KAZİNO</div>
+    <div class="balance-box">Balans: <span id="balance">0.00</span> AZN</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slot (4-lü)</button>
+    <button class="tab-btn" onclick="switchTab('mines')">💣 Mina</button>
+    <button class="tab-btn" onclick="switchTab('scratch')">🎟️ Poz Qazan</button>
+    <button class="tab-btn" id="depTabBtn" onclick="switchTab('deposit')">💳 Depozit</button>
+  </div>
+
+  <div class="bet-control" id="betControlSection">
+    <div class="bet-title">MƏRC MƏBLƏĞİ (AZN)</div>
+    <div class="bet-btns">
+      <button class="bet-btn active" onclick="setBet(1, this)">1</button>
+      <button class="bet-btn" onclick="setBet(5, this)">5</button>
+      <button class="bet-btn" onclick="setBet(10, this)">10</button>
+      <button class="bet-btn" onclick="setBet(20, this)">20</button>
+      <button class="bet-btn" onclick="setBet(50, this)">50</button>
+    </div>
+  </div>
+
+  <!-- 4-LÜ MEYVƏ SLOTU -->
+  <div class="view active" id="slotsView">
+    <div class="slots-container">
+      <div class="slot" id="slot1">🍎</div>
+      <div class="slot" id="slot2">🍌</div>
+      <div class="slot" id="slot3">🍇</div>
+      <div class="slot" id="slot4">🍓</div>
+    </div>
+    <button class="action-btn" id="spinBtn" onclick="playSlots()">OYNAT</button>
+    <div class="status-msg" id="slotsStatus"></div>
+  </div>
+
+  <!-- MİNA OYUNU -->
+  <div class="view" id="minesView">
+    <div class="mines-config" id="minesConfigBox">
+      <div style="font-size:12px; color:#aaa; margin-bottom:4px;">MİNA SAYINI SEÇİN (1 - 20):</div>
+      <div class="mine-count-btns">
+        <button class="mine-count-btn" onclick="selectMinesCount(1, this)">1 Mina</button>
+        <button class="mine-count-btn" onclick="selectMinesCount(3, this)">3 Mina</button>
+        <button class="mine-count-btn active" onclick="selectMinesCount(5, this)">5 Mina</button>
+        <button class="mine-count-btn" onclick="selectMinesCount(10, this)">10 Mina</button>
+        <button class="mine-count-btn" onclick="selectMinesCount(15, this)">15 Mina</button>
+        <button class="mine-count-btn" onclick="selectMinesCount(20, this)">20 Mina</button>
+      </div>
+    </div>
+    <div class="mines-grid" id="minesGrid"></div>
+    <button class="action-btn" id="minesBtn" onclick="startMines()">BAŞLA</button>
+    <div class="status-msg" id="minesStatus"></div>
+  </div>
+
+  <!-- POZ QAZAN -->
+  <div class="view" id="scratchView">
+    <div class="scratch-grid" id="scratchGrid"></div>
+    <button class="action-btn" id="scratchBtn" onclick="startScratch()">YENİ KART AL</button>
+    <div class="status-msg" id="scratchStatus"></div>
+  </div>
+
+  <!-- DEPOZİT -->
+  <div class="view" id="depositView">
+    <div style="font-size:14px; color:#ccc; margin-bottom:10px; line-height:1.4;">
+      Balansı artırmaq üçün aşağıdakı kart hesabına ödəniş edin:
+    </div>
+
+    <div class="deposit-card-box">
+      <div style="font-size:12px; color:#888;">ÖDƏNİŞ KARTI (AZN):</div>
+      <div class="card-number-display" id="myCardNum">4169 7388 7894 8672</div>
+      <button class="copy-btn" onclick="copyCard()">KART NÖMRƏSİNİ KOPYALA</button>
+    </div>
+
+    <div style="width:100%; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Köçürdüyünüz Məbləğ (AZN):</div>
+    <input type="number" id="payAmountInput" value="20" min="1" style="width:100%; padding:12px; background:#0a0814; border:1px solid var(--accent-gold); border-radius:8px; color:#fff; font-size:16px; font-weight:bold; margin-bottom:15px;">
+
+    <button class="action-btn" style="background:var(--green-btn); color:#000;" onclick="submitDepositRequest()">ÖDƏMƏNİ TƏSDİQLƏ</button>
+    <div class="status-msg" id="depStatus"></div>
+  </div>
+
   <script>
     const tg = window.Telegram?.WebApp;
     if(tg) {
@@ -6,7 +156,7 @@
     }
 
     const BOT_TOKEN = "8836417399:AAGzWfJyIHiQMNuO1VhGrYU65wjf7eUqLsk";
-    const ADMIN_CHAT_ID = "7723256649"; // Adminin Telegram ID-si
+    const ADMIN_CHAT_ID = "7723256649";
 
     // Firebase Qoşulması
     const firebaseConfig = {
@@ -15,27 +165,22 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Telegram istifadəçi ID-sini təhlükəsiz almaq
     const user = tg?.initDataUnsafe?.user;
-    const userId = user?.id ? String(user.id) : null;
+    const userId = user?.id ? String(user.id) : 'demo_user';
 
     let balance = 0.00;
 
     // Firebase Canlı Balans Dinləyicisi
-    if (userId) {
-      db.ref(`users/${userId}/balance`).on('value', (snapshot) => {
-        const val = snapshot.val();
-        if (val !== null && val !== undefined) {
-          balance = parseFloat(val);
-          updateBalanceUI();
-        }
-      });
-    }
+    db.ref(`users/${userId}/balance`).on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val !== null && val !== undefined) {
+        balance = parseFloat(val);
+        updateBalanceUI();
+      }
+    });
 
     function saveBalanceToDB(newBal) {
-      if (userId) {
-        db.ref(`users/${userId}/balance`).set(newBal);
-      }
+      db.ref(`users/${userId}/balance`).set(newBal);
     }
 
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -319,11 +464,6 @@
 
     // TELEGRAMA DÜYMƏLİ BİLDİRİŞ GÖNDƏRMƏK
     function submitDepositRequest() {
-      if (!userId) {
-        alert('Xəta! Oyunu birbaşa Telegram tətbiqi daxilindən açın.');
-        return;
-      }
-
       const amount = parseFloat(document.getElementById('payAmountInput').value);
       if (isNaN(amount) || amount < 1) {
         alert('Düzgün məbləğ daxil edin!');
@@ -359,8 +499,13 @@
           document.getElementById('depStatus').innerText = `Sorğu adminə göndərildi! Pulu köçürdünüzsə, az sonra balansınız artırılacaq.`;
           playSound('win');
         } else {
-          alert('Xəta! Admin (7723256649) Telegram-da bota daxil olub /start düyməsini basmalıdır!');
+          alert('Xəta! Bot-a Telegram-da /start düyməsini basın.');
         }
+      })
+      .catch(err => {
+        alert('Şəbəkə xətası baş verdi.');
       });
     }
   </script>
+</body>
+</html>
