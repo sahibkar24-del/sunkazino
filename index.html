@@ -392,6 +392,19 @@
     let scratchItems = [];
     let revealedScratch = 0;
 
+    function initEmptyScratchGrid() {
+      const grid = document.getElementById('scratchGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const card = document.createElement('div');
+        card.className = 'scratch-card';
+        card.innerText = '❓';
+        grid.appendChild(card);
+      }
+      document.getElementById('scratchStatus').innerText = 'Oynamaq üçün "YENİ KART AL" düyməsinə basın';
+    }
+    initEmptyScratchGrid();
+
     function startScratch() {
       if (!checkBalanceOrRedirect()) return;
 
@@ -425,7 +438,6 @@
 
       document.getElementById('scratchStatus').innerText = 'Xanaları pozun (3 eyni meyvə = uduş)';
     }
-    startScratch();
 
     function scratchCard(index, card) {
       if (card.classList.contains('revealed')) return;
