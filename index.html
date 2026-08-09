@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sun Kazino</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: #0d0a1a;
+      --card-bg: #17132b;
+      --accent-gold: #ffd700;
+      --accent-orange: #ff8c00;
+      --text-color: #ffffff;
+      --green-btn: #2ed573;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; user-select: none; }
+    body { background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; text-align: center; }
+
+    header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .logo { font-size: 22px; font-weight: bold; color: var(--accent-gold); text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+    .balance-box { background: var(--card-bg); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 6px 16px; font-size: 16px; font-weight: bold; }
+    .balance-box span { color: var(--accent-gold); font-size: 18px; }
+
+    .tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; margin-bottom: 15px; }
+    .tab-btn { flex: 1; padding: 10px 4px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .tab-btn.active { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border-color: var(--accent-gold); }
+
+    .view { display: none; width: 100%; max-width: 420px; background: var(--card-bg); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,215,0,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .view.active { display: flex; flex-direction: column; align-items: center; }
+
+    .bet-control { margin-bottom: 15px; width: 100%; }
+    .bet-title { font-size: 13px; color: #888; margin-bottom: 6px; }
+    .bet-btns { display: flex; gap: 6px; justify-content: center; }
+    .bet-btn { flex: 1; padding: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .bet-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.1); }
+
+    /* 4-lü Slot */
+    .slots-container { display: flex; gap: 6px; margin: 20px 0; width: 100%; justify-content: center; }
+    .slot { width: 70px; height: 90px; background: #0a0814; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 34px; border: 2px solid var(--accent-gold); }
+
+    /* Mines Options */
+    .mines-config { width: 100%; margin-bottom: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
+    .mine-count-btns { display: flex; gap: 5px; margin-top: 5px; }
+    .mine-count-btn { flex: 1; padding: 5px; background: #0a0814; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .mine-count-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+    .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; margin: 15px 0; }
+    .mine-card { aspect-ratio: 1; background: #0a0814; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
+    .mine-card.revealed { background: #252042; }
+
+    .scratch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 240px; margin: 15px 0; }
+    .scratch-card { width: 70px; height: 70px; background: linear-gradient(135deg, #444, #222); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; border: 1px solid var(--accent-gold); }
+    .scratch-card.revealed { background: #0a0814; }
+
+    .action-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border: none; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,140,0,0.3); transition: 0.1s; margin-top: 10px; }
+    .action-btn:active { transform: scale(0.98); }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .status-msg { margin-top: 12px; font-size: 15px; min-height: 20px; font-weight: 500; }
+
+    .deposit-card-box { width: 100%; background: #100b21; border: 2px dashed var(--accent-gold); border-radius: 14px; padding: 15px; margin-bottom: 15px; text-align: center; }
+    .card-number-display { font-size: 20px; font-weight: bold; color: var(--accent-gold); letter-spacing: 2px; margin: 10px 0; background: rgba(255,215,0,0.1); padding: 10px; border-radius: 8px; }
+    .copy-btn { background: var(--accent-orange); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">☀️ SUN KAZİNO</div>
+    <div class="balance-box">Balans: <span id="balance">0.00</span> AZN</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slot (4-lü)</button>
+    <button class="tab-btn" onclick="switchTab('mines')">💣 Mina</button>
+    <button class="tab-btn" onclick="switchTab('scratch')">🎟️ Poz Qazan</button>
+    <button class="tab-btn" id="depTabBtn" onclick="switchTab('deposit')">💳 Depozit</button>
+  </div>
+
+  <div class="bet-control" id="betControlSection">
+    <div class="bet-title">MƏRC MƏBLƏĞİ (AZN)</div>
+    <div class="bet-btns">
+      <button class="bet-btn active" onclick="setBet(1, this)">1</button>
+      <button class="bet-btn" onclick="setBet(5, this)">5</button>
+      <button class="bet-btn" onclick="setBet(10, this)">10</button>
+      <button class="bet-btn" onclick="setBet(20, this)">20</button>
+      <button class="bet-btn" onclick="setBet(50, this)">50</button>
+    </div>
+  </div>
+
+  <!-- 4-LÜ MEYVƏ SLOTI -->
+  <div class="view active" id="slotsView">
+    <div class="slots-container">
+      <div class="slot" id="slot1">🍎</div>
+      <div class="slot" id="slot2">🍌</div>
+      <div class="slot" id="slot3">🍇</div>
+      <div class="slot" id="slot4">🍓</div>
+    </div>
+    <button class="action-btn" id="spinBtn" onclick="playSlots()">OYNAT</button>
+    <div class="status-msg" id="slotsStatus"></div>
+  </div>
+
+  <!-- MİNA OYUNU (Mina Sayı Seçimi İlə) -->
+  <div class="view" id="minesView">
+    <div class="mines-config" id="minesConfigBox">
+      <div style="font-size:12px; color:#aaa; margin-bottom:4px;">MİNA SAYINI SEÇİN:</div>
+      <div class="mine-count-btns">
+        <button class="mine-count-btn" onclick="selectMinesCount(3, this)">3 Mina</button>
+        <button class="mine-count-btn active" onclick="selectMinesCount(5, this)">5 Mina</button>
+        <button class="mine-count-btn" onclick="selectMinesCount(10, this)">10 Mina</button>
+        <button class="mine-count-btn" onclick="selectMinesCount(15, this)">15 Mina</button>
+        <button class="mine-count-btn" onclick="selectMinesCount(20, this)">20 Mina</button>
+      </div>
+    </div>
+    <div class="mines-grid" id="minesGrid"></div>
+    <button class="action-btn" id="minesBtn" onclick="startMines()">BAŞLA</button>
+    <div class="status-msg" id="minesStatus"></div>
+  </div>
+
+  <!-- POZ QAZAN -->
+  <div class="view" id="scratchView">
+    <div class="scratch-grid" id="scratchGrid"></div>
+    <button class="action-btn" id="scratchBtn" onclick="startScratch()">YENİ KART AL</button>
+    <div class="status-msg" id="scratchStatus"></div>
+  </div>
+
+  <!-- DEPOZİT -->
+  <div class="view" id="depositView">
+    <div style="font-size:14px; color:#ccc; margin-bottom:10px; line-height:1.4;">
+      Balansı artırmaq üçün aşağıdakı kart hesabına ödəniş edin:
+    </div>
+
+    <div class="deposit-card-box">
+      <div style="font-size:12px; color:#888;">ÖDƏNİŞ KARTI (AZN):</div>
+      <div class="card-number-display" id="myCardNum">4127 0000 0000 0000</div>
+      <button class="copy-btn" onclick="copyCard()">KART NÖMRƏSİNİ KOPYALA</button>
+    </div>
+
+    <div style="width:100%; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Köçürdüyünüz Məbləğ (AZN):</div>
+    <input type="number" id="payAmountInput" value="20" min="1" style="width:100%; padding:12px; background:#0a0814; border:1px solid var(--accent-gold); border-radius:8px; color:#fff; font-size:16px; font-weight:bold; margin-bottom:15px;">
+
+    <button class="action-btn" style="background:var(--green-btn); color:#000;" onclick="submitDepositRequest()">ÖDƏMƏNİ TƏSDİQLƏ</button>
+    <div class="status-msg" id="depStatus"></div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if(tg) tg.expand();
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioCtx();
+
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'click') {
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      } else if (type === 'win') {
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'lose') {
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      }
+    }
+
+    let balance = 0.00;
+    let currentBet = 1;
+    let selectedMinesCount = 5;
+
+    function updateBalanceUI() {
+      document.getElementById('balance').innerText = balance.toFixed(2);
+    }
+    updateBalanceUI();
+
+    function setBet(amount, btn) {
+      playSound('click');
+      currentBet = amount;
+      document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function selectMinesCount(count, btn) {
+      if(minesState.active) return;
+      playSound('click');
+      selectedMinesCount = count;
+      document.querySelectorAll('.mine-count-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function switchTab(tab) {
+      playSound('click');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      
+      const targetBtn = document.querySelector(`[onclick="switchTab('${tab}')"]`);
+      if(targetBtn) targetBtn.classList.add('active');
+      
+      document.getElementById(tab + 'View').classList.add('active');
+      document.getElementById('betControlSection').style.display = (tab === 'deposit') ? 'none' : 'block';
+    }
+
+    function checkBalanceOrRedirect() {
+      if (balance < currentBet) {
+        playSound('lose');
+        alert('Balansınız kifayət etmir! Lütfən balansı artırın.');
+        switchTab('deposit');
+        return false;
+      }
+      return true;
+    }
+
+    // --- 4-LÜ MEYVƏ SLOTU ---
+    const fruitItems = ['🍎', '🍌', '🍇', '🍓', '🍉', '🍍'];
+    function playSlots() {
+      if (!checkBalanceOrRedirect()) return;
+
+      balance -= currentBet;
+      updateBalanceUI();
+      playSound('click');
+
+      const spinBtn = document.getElementById('spinBtn');
+      spinBtn.disabled = true;
+      document.getElementById('slotsStatus').innerText = 'Fırlanır...';
+
+      let count = 0;
+      const timer = setInterval(() => {
+        let r1, r2, r3, r4;
+        const winChance = Math.random(); // 1% Uduş Şansı
+        
+        if (count > 12) {
+          clearInterval(timer);
+          spinBtn.disabled = false;
+
+          if (winChance <= 0.01) { // 1% UDUŞ (4 EYNİ MEYVƏ)
+            const sym = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+            r1 = r2 = r3 = r4 = sym;
+            const win = currentBet * 25; // 4-lü dü düşdükdə 25x Əmsal
+            balance += win;
+            playSound('win');
+            document.getElementById('slotsStatus').innerText = `BÖYÜK CEKPOT! +${win.toFixed(2)} AZN! 🎉`;
+          } else { // 99% UDUZMAQ
+            r1 = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+            r2 = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+            r3 = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+            r4 = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+            if (r1 === r2 && r2 === r3 && r3 === r4) {
+              r4 = (r1 === '🍎') ? '🍌' : '🍎';
+            }
+            playSound('lose');
+            document.getElementById('slotsStatus').innerText = 'Şansınızı bir daha sınayın!';
+          }
+
+          document.getElementById('slot1').innerText = r1;
+          document.getElementById('slot2').innerText = r2;
+          document.getElementById('slot3').innerText = r3;
+          document.getElementById('slot4').innerText = r4;
+          updateBalanceUI();
+        } else {
+          document.getElementById('slot1').innerText = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+          document.getElementById('slot2').innerText = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+          document.getElementById('slot3').innerText = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+          document.getElementById('slot4').innerText = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+          count++;
+        }
+      }, 80);
+    }
+
+    // --- MİNA OYUNU (Dinamik Əmsal Və Məbləğ Hesablaması) ---
+    let minesState = { active: false, bombs: [], openedCount: 0, multiplier: 1.0 };
+    
+    function initMinesGrid() {
+      const grid = document.getElementById('minesGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const card = document.createElement('div');
+        card.className = 'mine-card';
+        card.onclick = () => revealMine(i, card);
+        grid.appendChild(card);
+      }
+    }
+    initMinesGrid();
+
+    function startMines() {
+      const btn = document.getElementById('minesBtn');
+      if (minesState.active) {
+        const win = currentBet * minesState.multiplier;
+        balance += win;
+        updateBalanceUI();
+        playSound('win');
+        document.getElementById('minesStatus').innerText = `Nağdlaşdırıldı: +${win.toFixed(2)} AZN`;
+        endMines();
+        return;
+      }
+
+      if (!checkBalanceOrRedirect()) return;
+
+      balance -= currentBet;
+      updateBalanceUI();
+      playSound('click');
+
+      minesState = { active: true, bombs: [], openedCount: 0, multiplier: 1.0 };
+      
+      // Seçilən mina sayına görə bombaları yerləşdiririk
+      while(minesState.bombs.length < selectedMinesCount) {
+        let r = Math.floor(Math.random() * 25);
+        if(!minesState.bombs.includes(r)) minesState.bombs.push(r);
+      }
+
+      initMinesGrid();
+      document.getElementById('minesConfigBox').style.pointerEvents = 'none';
+      btn.innerText = `NAĞDLAŞDIR (${currentBet.toFixed(2)} AZN)`;
+      document.getElementById('minesStatus').innerText = `${selectedMinesCount} Mina Aktivdir. Təmiz xanaları tapın!`;
+    }
+
+    function revealMine(index, card) {
+      if(!minesState.active || card.classList.contains('revealed')) return;
+
+      card.classList.add('revealed');
+      if (minesState.bombs.includes(index)) {
+        card.innerText = '💣';
+        playSound('lose');
+        document.getElementById('minesStatus').innerText = 'Mina partladı! Uduzdunuz.';
+        endMines();
+      } else {
+        card.innerText = '💎';
+        playSound('click');
+        minesState.openedCount++;
+        
+        // Əmsal Mina Sayına Mütənasib Olaraq Artır (Çox mina = Yüksək əmsal)
+        const stepMultiplier = 1 + (selectedMinesCount * 0.12);
+        minesState.multiplier *= stepMultiplier;
+
+        const currentWin = currentBet * minesState.multiplier;
+        document.getElementById('minesBtn').innerText = `NAĞDLAŞDIR (${currentWin.toFixed(2)} AZN - x${minesState.multiplier.toFixed(2)})`;
+      }
+    }
+
+    function endMines() {
+      minesState.active = false;
+      document.getElementById('minesConfigBox').style.pointerEvents = 'auto';
+      document.getElementById('minesBtn').innerText = 'YENİDƏN BAŞLA';
+    }
+
+    // --- POZ QAZAN ---
+    let scratchItems = [];
+    let revealedScratch = 0;
+
+    function startScratch() {
+      if (!checkBalanceOrRedirect()) return;
+
+      balance -= currentBet;
+      updateBalanceUI();
+      playSound('click');
+
+      scratchItems = [];
+      revealedScratch = 0;
+
+      const isWin = Math.random() <= 0.01; // 1% Uduş Ehtimalı
+
+      if (isWin) {
+        const winSym = fruitItems[Math.floor(Math.random() * fruitItems.length)];
+        scratchItems = [winSym, winSym, winSym, '🍎', '🍌', '🍇', '🍓', '🍉', '🍍'];
+      } else {
+        scratchItems = ['🍎', '🍎', '🍌', '🍌', '🍇', '🍇', '🍓', '🍓', '🍉'];
+      }
+
+      scratchItems.sort(() => Math.random() - 0.5);
+
+      const grid = document.getElementById('scratchGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const card = document.createElement('div');
+        card.className = 'scratch-card';
+        card.innerText = '❓';
+        card.onclick = () => scratchCard(i, card);
+        grid.appendChild(card);
+      }
+
+      document.getElementById('scratchStatus').innerText = 'Xanaları pozun (3 eyni meyvə = uduş)';
+    }
+    startScratch();
+
+    function scratchCard(index, card) {
+      if (card.classList.contains('revealed')) return;
+
+      card.classList.add('revealed');
+      card.innerText = scratchItems[index];
+      playSound('click');
+      revealedScratch++;
+
+      if (revealedScratch === 9) {
+        const counts = {};
+        scratchItems.forEach(item => counts[item] = (counts[item] || 0) + 1);
+        let won = false;
+
+        for (let item in counts) {
+          if (counts[item] >= 3) { won = true; break; }
+        }
+
+        if (won) {
+          const win = currentBet * 5;
+          balance += win;
+          playSound('win');
+          document.getElementById('scratchStatus').innerText = `3 EYNİ MEYVƏ! +${win.toFixed(2)} AZN! 🎉`;
+        } else {
+          playSound('lose');
+          document.getElementById('scratchStatus').innerText = 'Uduş olmadı, bir daha sınayın.';
+        }
+        updateBalanceUI();
+      }
+    }
+
+    // --- DEPOZİT VƏ KART KOPYALAMA ---
+    function copyCard() {
+      const cardNum = document.getElementById('myCardNum').innerText.replace(/\s+/g, '');
+      navigator.clipboard.writeText(cardNum);
+      alert('Kart nömrəsi kopyalandı!');
+    }
+
+    function submitDepositRequest() {
+      const amount = parseFloat(document.getElementById('payAmountInput').value);
+      if (isNaN(amount) || amount < 1) {
+        alert('Düzgün məbləğ daxil edin!');
+        return;
+      }
+
+      const user = tg?.initDataUnsafe?.user;
+      const username = user ? `@${user.username || user.first_name}` : 'İstifadəçi';
+
+      if(tg && tg.sendData) {
+        tg.sendData(JSON.stringify({ type: 'deposit', amount: amount, user: username }));
+      }
+
+      document.getElementById('depStatus').innerText = `Məlumat adminə göndərildi! Pulu kart hesabına köçürdünüzsə, az sonra balansınız əlavə olunacaq.`;
+      playSound('win');
+    }
+  </script>
+</body>
+</html>
