@@ -28,8 +28,8 @@
     .balance-box { background: var(--card-bg); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 6px 14px; font-size: 15px; font-weight: bold; }
     .balance-box span { color: var(--accent-gold); font-size: 17px; }
 
-    .tabs { display: flex; gap: 6px; width: 100%; max-width: 420px; margin-bottom: 12px; }
-    .tab-btn { flex: 1; padding: 10px 2px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .tabs { display: flex; gap: 4px; width: 100%; max-width: 420px; margin-bottom: 12px; }
+    .tab-btn { flex: 1; padding: 10px 2px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .tab-btn.active { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border-color: var(--accent-gold); }
 
     .view { display: none; width: 100%; max-width: 420px; background: var(--card-bg); border-radius: 18px; padding: 15px; border: 1px solid rgba(255,215,0,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
@@ -56,7 +56,7 @@
     .mine-card { aspect-ratio: 1; background: #0a0814; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
     .mine-card.revealed { background: #252042; }
 
-    /* POZ QAZAN BİLET QiYMƏTLƏRİ */
+    /* POZ QAZAN BİLET QİYMƏTLƏRİ */
     .scratch-price-selector { display: flex; gap: 8px; width: 100%; margin-bottom: 12px; }
     .scratch-price-btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; }
     .scratch-price-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.15); }
@@ -65,14 +65,14 @@
     .scratch-card { width: 65px; height: 65px; background: linear-gradient(135deg, #444, #222); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; border: 1px solid var(--accent-gold); }
     .scratch-card.revealed { background: #0a0814; }
 
+    /* INPUT VƏ DÜYMƏLƏR */
+    .input-field { width: 100%; padding: 12px; background: #0a0814; border: 1px solid var(--accent-gold); border-radius: 8px; color: #fff; font-size: 15px; font-weight: bold; margin-bottom: 12px; outline: none; }
+    .input-label { width: 100%; text-align: left; font-size: 12px; color: #aaa; margin-bottom: 5px; }
+
     .action-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border: none; font-size: 17px; font-weight: 800; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,140,0,0.4); transition: 0.1s; }
     .action-btn:active { transform: scale(0.98); }
     .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .status-msg { margin-top: 10px; font-size: 14px; min-height: 20px; font-weight: 600; }
-
-    .deposit-card-box { width: 100%; background: #100b21; border: 2px dashed var(--accent-gold); border-radius: 14px; padding: 15px; margin-bottom: 15px; text-align: center; }
-    .card-number-display { font-size: 19px; font-weight: bold; color: var(--accent-gold); letter-spacing: 2px; margin: 10px 0; background: rgba(255,215,0,0.1); padding: 10px; border-radius: 8px; }
-    .copy-btn { background: var(--accent-orange); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-bottom: 5px; }
   </style>
 </head>
 <body>
@@ -83,10 +83,11 @@
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slot (6-lı)</button>
+    <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slot</button>
     <button class="tab-btn" onclick="switchTab('mines')">💣 Mina</button>
     <button class="tab-btn" onclick="switchTab('scratch')">🎟️ Poz Qazan</button>
-    <button class="tab-btn" id="depTabBtn" onclick="switchTab('deposit')">💳 Depozit</button>
+    <button class="tab-btn" onclick="switchTab('deposit')">💳 Depozit</button>
+    <button class="tab-btn" onclick="switchTab('withdraw')">💸 Çıxarış</button>
   </div>
 
   <div class="bet-control" id="betControlSection">
@@ -122,7 +123,6 @@
     <div class="mines-dropdown-box" id="minesConfigBox">
       <label for="mineSelect">Minalar:</label>
       <select id="mineSelect" class="mines-select" onchange="changeMineCount(this.value)">
-        <!-- 1-dən 24-ə qədər avtomatik dolur -->
       </select>
     </div>
 
@@ -145,23 +145,33 @@
     <div class="status-msg" id="scratchStatus"></div>
   </div>
 
-  <!-- DEPOZİT -->
+  <!-- DEPOZİT (DEPOSIT) -->
   <div class="view" id="depositView">
-    <div style="font-size:14px; color:#ccc; margin-bottom:10px; line-height:1.4;">
-      Balansı artırmaq üçün aşağıdakı kart hesabına ödəniş edin:
+    <div style="font-size:14px; color:#ccc; margin-bottom:12px; line-height:1.4;">
+      Oyun balansınızı artırmaq üçün depozit məbləğini daxil edin.
     </div>
 
-    <div class="deposit-card-box">
-      <div style="font-size:12px; color:#888;">ÖDƏNİŞ KARTI (AZN):</div>
-      <div class="card-number-display" id="myCardNum">4169 7388 7894 8672</div>
-      <button class="copy-btn" onclick="copyCard()">KART NÖMRƏSİNİ KOPYALA</button>
+    <div class="input-label">Depozit Məbləği (AZN) - Min 10 AZN:</div>
+    <input type="number" id="depositAmountInput" class="input-field" value="10" min="10">
+
+    <button class="action-btn" onclick="submitDepositRequest()">💳 DEPOZİT SORĞUSU GÖNDƏR</button>
+    <div class="status-msg" id="depositStatus"></div>
+  </div>
+
+  <!-- ÇIXARIŞ (WITHDRAWAL) -->
+  <div class="view" id="withdrawView">
+    <div style="font-size:14px; color:#ccc; margin-bottom:12px; line-height:1.4;">
+      Balansınızdakı vəsaiti şəxsi bank kartınıza köçürmək üçün məlumatları daxil edin.
     </div>
 
-    <div style="width:100%; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Köçürdüyünüz Məbləğ (AZN):</div>
-    <input type="number" id="payAmountInput" value="20" min="1" style="width:100%; padding:12px; background:#0a0814; border:1px solid var(--accent-gold); border-radius:8px; color:#fff; font-size:16px; font-weight:bold; margin-bottom:15px;">
+    <div class="input-label">Kart Nömrəniz (16 rəqəm):</div>
+    <input type="text" id="withdrawCardInput" class="input-field" placeholder="4169 0000 0000 0000" maxlength="19">
 
-    <button class="action-btn" style="background:var(--green-btn); color:#000;" onclick="submitDepositRequest()">ÖDƏMƏNİ TƏSDİQLƏ</button>
-    <div class="status-msg" id="depStatus"></div>
+    <div class="input-label">Çıxarış Məbləği (AZN) - Min 30 AZN:</div>
+    <input type="number" id="withdrawAmountInput" class="input-field" value="30" min="30">
+
+    <button class="action-btn" style="background:var(--green-btn); color:#000;" onclick="submitWithdrawRequest()">💸 ÇIXARIŞ ET</button>
+    <div class="status-msg" id="withdrawStatus"></div>
   </div>
 
   <script>
@@ -231,7 +241,6 @@
     let selectedMinesCount = 1;
     let scratchTicketPrice = 1;
 
-    // Mina seçimi üçün 1-dən 24-ə qədər option-ları doldururuq
     const selectElem = document.getElementById('mineSelect');
     for (let i = 1; i <= 24; i++) {
       const opt = document.createElement('option');
@@ -274,16 +283,13 @@
       if(targetBtn) targetBtn.classList.add('active');
       
       document.getElementById(tab + 'View').classList.add('active');
-
-      // Bet paneli yalnız Slot və Mina oyunlarında lazımdır
       document.getElementById('betControlSection').style.display = (tab === 'slots' || tab === 'mines') ? 'block' : 'none';
     }
 
     function checkBalanceOrRedirect(requiredAmount) {
       if (balance < requiredAmount) {
         playSound('lose');
-        alert('Balansınız kifayət etmir! Lütfən balansı artırın.');
-        switchTab('deposit');
+        alert('Balansınız kifayət etmir!');
         return false;
       }
       return true;
@@ -351,7 +357,7 @@
       }, 70);
     }
 
-    /* --- MİNA OYUNU ALQORİTMİ (Eynilə Kazino Qaydası) --- */
+    /* --- MİNA OYUNU --- */
     let minesState = { active: false, bombs: [], openedCount: 0, currentMultiplier: 1.0 };
     
     function calculateMinesMultiplier(opened, mines) {
@@ -359,7 +365,7 @@
       for (let i = 0; i < opened; i++) {
         prob *= (25 - mines - i) / (25 - i);
       }
-      return (1 / prob) * 0.96; // %96 RTP kazino ehtimalı
+      return (1 / prob) * 0.96;
     }
 
     function initMinesGrid() {
@@ -414,7 +420,6 @@
         playSound('lose');
         document.getElementById('minesStatus').innerText = 'Mina partladı! Uduzdunuz.';
         
-        // Bütün minaları göstər
         document.querySelectorAll('.mine-card').forEach((c, i) => {
           if (minesState.bombs.includes(i)) {
             c.innerText = '💣';
@@ -440,7 +445,7 @@
       document.getElementById('minesBtn').innerText = 'YENİDƏN BAŞLA';
     }
 
-    /* --- POZ QAZAN (1, 3, 5 AZN BİLET) --- */
+    /* --- POZ QAZAN --- */
     let scratchItems = [];
     let revealedScratch = 0;
 
@@ -467,7 +472,6 @@
       scratchItems = [];
       revealedScratch = 0;
 
-      // Qazanma şansı
       const isWin = Math.random() <= 0.35; 
 
       if (isWin) {
@@ -510,7 +514,6 @@
         }
 
         if (won) {
-          // Bilet qiymətinə uyğun multiplier uduşu (baha bilet = böyük nağd uduş)
           const winMultiplier = 5; 
           const win = scratchTicketPrice * winMultiplier;
           balance += win;
@@ -525,31 +528,16 @@
     }
 
     /* --- DEPOZİT SİSTEMİ --- */
-    function copyCard() {
-      const cardNum = document.getElementById('myCardNum').innerText.replace(/\s+/g, '');
-      navigator.clipboard.writeText(cardNum);
-      alert('Kart nömrəsi kopyalandı!');
-    }
-
     function submitDepositRequest() {
-      const amount = parseFloat(document.getElementById('payAmountInput').value);
-      if (isNaN(amount) || amount < 1) {
-        alert('Düzgün məbləğ daxil edin!');
+      const amount = parseFloat(document.getElementById('depositAmountInput').value);
+
+      if (isNaN(amount) || amount < 10) {
+        alert('Minimum depozit məbləği 10 AZN-dir!');
         return;
       }
 
       const username = user?.username ? `@${user.username}` : (user?.first_name || 'İstifadəçi');
-
-      const messageText = `💳 <b>YENİ DEPOZİT SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💰 <b>Məbləğ:</b> ${amount} AZN`;
-
-      const keyboard = {
-        inline_keyboard: [
-          [
-            { text: `✅ Təsdiqlə (+${amount} AZN)`, callback_data: `approve_${userId}_${amount}` },
-            { text: `❌ İmtina et`, callback_data: `reject_${userId}` }
-          ]
-        ]
-      };
+      const messageText = `💳 <b>YENİ DEPOZİT SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💰 <b>Məbləğ:</b> ${amount.toFixed(2)} AZN`;
 
       fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -557,17 +545,66 @@
         body: JSON.stringify({
           chat_id: ADMIN_CHAT_ID,
           text: messageText,
-          parse_mode: 'HTML',
-          reply_markup: keyboard
+          parse_mode: 'HTML'
         })
       })
       .then(res => res.json())
       .then(data => {
         if(data.ok) {
-          document.getElementById('depStatus').innerText = `Sorğu adminə göndərildi! Pulu köçürdünüzsə, az sonra balansınız artırılacaq.`;
+          document.getElementById('depositStatus').innerText = `Depozit sorğunuz adminə göndərildi. Təsdiqləndikdən sonra balansınız artırılacaq.`;
           playSound('win');
         } else {
-          alert('Xəta! Bot-a Telegram-da /start düyməsini basın.');
+          alert('Xəta baş verdi. Bot-a Telegram-da /start verin.');
+        }
+      })
+      .catch(err => {
+        alert('Şəbəkə xətası baş verdi.');
+      });
+    }
+
+    /* --- ÇIXARIŞ (WITHDRAW) SİSTEMİ --- */
+    function submitWithdrawRequest() {
+      const cardNum = document.getElementById('withdrawCardInput').value.trim();
+      const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
+
+      if (!cardNum || cardNum.length < 12) {
+        alert('Zəhmət olmasa düzgün kart nömrəsi daxil edin!');
+        return;
+      }
+
+      if (isNaN(amount) || amount < 30) {
+        alert('Minimum çıxarış məbləği 30 AZN-dir!');
+        return;
+      }
+
+      if (balance < amount) {
+        alert('Balansınızda kifayət qədər vəsait yoxdur!');
+        return;
+      }
+
+      balance -= amount;
+      saveBalanceToDB(balance);
+
+      const username = user?.username ? `@${user.username}` : (user?.first_name || 'İstifadəçi');
+      const messageText = `💸 <b>YENİ ÇIXARIŞ SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💳 <b>Kart Nömrəsi:</b> <code>${cardNum}</code>\n💰 <b>Məbləğ:</b> ${amount.toFixed(2)} AZN`;
+
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.ok) {
+          document.getElementById('withdrawStatus').innerText = `Çıxarış sorğunuza baxılır. Məbləğ az sonra kartınıza köçürüləcək.`;
+          playSound('win');
+          document.getElementById('withdrawCardInput').value = '';
+        } else {
+          alert('Xəta baş verdi. Bot-a Telegram-da /start verin.');
         }
       })
       .catch(err => {
@@ -577,3 +614,4 @@
   </script>
 </body>
 </html>
+
