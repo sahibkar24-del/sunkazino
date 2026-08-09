@@ -28,8 +28,8 @@
     .balance-box { background: var(--card-bg); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 6px 14px; font-size: 15px; font-weight: bold; }
     .balance-box span { color: var(--accent-gold); font-size: 17px; }
 
-    .tabs { display: flex; gap: 4px; width: 100%; max-width: 420px; margin-bottom: 12px; }
-    .tab-btn { flex: 1; padding: 10px 2px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .tabs { display: flex; gap: 6px; width: 100%; max-width: 420px; margin-bottom: 12px; }
+    .tab-btn { flex: 1; padding: 10px 2px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .tab-btn.active { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border-color: var(--accent-gold); }
 
     .view { display: none; width: 100%; max-width: 420px; background: var(--card-bg); border-radius: 18px; padding: 15px; border: 1px solid rgba(255,215,0,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
@@ -83,10 +83,9 @@
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slot</button>
+    <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slot (6-lı)</button>
     <button class="tab-btn" onclick="switchTab('mines')">💣 Mina</button>
     <button class="tab-btn" onclick="switchTab('scratch')">🎟️ Poz Qazan</button>
-    <button class="tab-btn" onclick="switchTab('deposit')">💳 Depozit</button>
     <button class="tab-btn" onclick="switchTab('withdraw')">💸 Çıxarış</button>
   </div>
 
@@ -143,19 +142,6 @@
     <div class="scratch-grid" id="scratchGrid"></div>
     <button class="action-btn" id="scratchBtn" onclick="startScratch()">YENİ BİLET AL (<span id="scratchCostText">1.00</span> AZN)</button>
     <div class="status-msg" id="scratchStatus"></div>
-  </div>
-
-  <!-- DEPOZİT (DEPOSIT) -->
-  <div class="view" id="depositView">
-    <div style="font-size:14px; color:#ccc; margin-bottom:12px; line-height:1.4;">
-      Oyun balansınızı artırmaq üçün depozit məbləğini daxil edin.
-    </div>
-
-    <div class="input-label">Depozit Məbləği (AZN) - Min 10 AZN:</div>
-    <input type="number" id="depositAmountInput" class="input-field" value="10" min="10">
-
-    <button class="action-btn" onclick="submitDepositRequest()">💳 DEPOZİT SORĞUSU GÖNDƏR</button>
-    <div class="status-msg" id="depositStatus"></div>
   </div>
 
   <!-- ÇIXARIŞ (WITHDRAWAL) -->
@@ -527,41 +513,6 @@
       }
     }
 
-    /* --- DEPOZİT SİSTEMİ --- */
-    function submitDepositRequest() {
-      const amount = parseFloat(document.getElementById('depositAmountInput').value);
-
-      if (isNaN(amount) || amount < 10) {
-        alert('Minimum depozit məbləği 10 AZN-dir!');
-        return;
-      }
-
-      const username = user?.username ? `@${user.username}` : (user?.first_name || 'İstifadəçi');
-      const messageText = `💳 <b>YENİ DEPOZİT SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💰 <b>Məbləğ:</b> ${amount.toFixed(2)} AZN`;
-
-      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: ADMIN_CHAT_ID,
-          text: messageText,
-          parse_mode: 'HTML'
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if(data.ok) {
-          document.getElementById('depositStatus').innerText = `Depozit sorğunuz adminə göndərildi. Təsdiqləndikdən sonra balansınız artırılacaq.`;
-          playSound('win');
-        } else {
-          alert('Xəta baş verdi. Bot-a Telegram-da /start verin.');
-        }
-      })
-      .catch(err => {
-        alert('Şəbəkə xətası baş verdi.');
-      });
-    }
-
     /* --- ÇIXARIŞ (WITHDRAW) SİSTEMİ --- */
     function submitWithdrawRequest() {
       const cardNum = document.getElementById('withdrawCardInput').value.trim();
@@ -582,6 +533,7 @@
         return;
       }
 
+      // Məbləği balansdan çıxırıq
       balance -= amount;
       saveBalanceToDB(balance);
 
