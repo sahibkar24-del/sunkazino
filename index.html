@@ -3,270 +3,844 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sun Casino - 1xBet Style</title>
+  <title>Sun Kazino</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Firebase Kitabxanaları -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     :root {
-      --bg-dark: #0e141b;
-      --card-bg: #1a222d;
-      --1xbet-blue: #1178b3;
-      --1xbet-green: #28a745;
-      --accent-gold: #ffc107;
-      --text-main: #ffffff;
+      --bg-color: #0b0714;
+      --card-bg: #150f28;
+      --accent-gold: #ffd700;
+      --accent-orange: #ff8c00;
+      --text-color: #ffffff;
+      --green-btn: #2ed573;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
-    body { background: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 20px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; user-select: none; }
+    body { background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 12px; text-align: center; }
 
-    /* Top Bar */
-    header { width: 100%; max-width: 450px; background: #131a22; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--1xbet-blue); }
-    .logo { font-size: 18px; font-weight: 900; color: #fff; }
-    .logo span { color: var(--1xbet-blue); }
-    .balance-box { background: #0a0e12; border: 1px solid #2a3746; border-radius: 6px; padding: 5px 10px; font-size: 13px; font-weight: bold; }
-    .balance-box span { color: var(--1xbet-green); font-size: 15px; }
+    header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .logo { font-size: 20px; font-weight: bold; color: var(--accent-gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+    .balance-box { background: var(--card-bg); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 6px 14px; font-size: 15px; font-weight: bold; }
+    .balance-box span { color: var(--accent-gold); font-size: 17px; }
 
-    /* Navigasiya */
-    .nav-scroller { width: 100%; max-width: 450px; overflow-x: auto; background: #17202a; padding: 8px; display: flex; gap: 8px; scrollbar-width: none; }
-    .nav-scroller::-webkit-scrollbar { display: none; }
-    .tab-btn { padding: 8px 14px; background: #212c3a; border: none; color: #8f9cae; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; }
-    .tab-btn.active { background: var(--1xbet-blue); color: #fff; }
+    .tabs { display: flex; gap: 4px; width: 100%; max-width: 420px; margin-bottom: 12px; }
+    .tab-btn { flex: 1; padding: 8px 2px; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: #aaa; border-radius: 10px; font-size: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .tab-btn.active { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border-color: var(--accent-gold); }
 
-    /* Provayder Filtri */
-    .providers-bar { width: 100%; max-width: 450px; display: flex; gap: 6px; padding: 6px 8px; background: #0e141b; overflow-x: auto; }
-    .provider-chip { padding: 4px 10px; background: #1a232e; border: 1px solid #283545; border-radius: 12px; font-size: 10px; color: #aaa; cursor: pointer; white-space: nowrap; }
-    .provider-chip.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .view { display: none; width: 100%; max-width: 420px; background: var(--card-bg); border-radius: 18px; padding: 12px; border: 1px solid rgba(255,215,0,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+    .view.active { display: flex; flex-direction: column; align-items: center; }
 
-    /* Main View Container */
-    .view-container { width: 100%; max-width: 450px; padding: 10px; }
-    .view { display: none; }
-    .view.active { display: block; }
+    .bet-control { margin-bottom: 12px; width: 100%; max-width: 420px; }
+    .bet-title { font-size: 12px; color: #888; margin-bottom: 5px; }
+    .bet-btns { display: flex; gap: 6px; justify-content: center; }
+    .bet-btn { flex: 1; padding: 8px 2px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .bet-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.15); }
 
-    /* Slot & Casino Grid */
-    .casino-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px; }
-    .game-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid #263342; position: relative; cursor: pointer; }
-    .game-card img { width: 100%; height: 100px; object-fit: cover; display: block; }
-    .game-title { padding: 6px; font-size: 11px; font-weight: bold; text-align: center; background: #131a22; }
-    .live-badge { position: absolute; top: 5px; left: 5px; background: #e74c3c; color: #fff; font-size: 8px; padding: 2px 5px; font-weight: bold; border-radius: 3px; text-transform: uppercase; }
+    /* ================= EGT / BELL LINK SLOT STİLİ ================= */
+    .egt-wrapper { width: 100%; background: #000; border: 2px solid #520000; border-radius: 12px; padding: 6px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.3); }
 
-    /* EGT / 1xBet Slot Interface */
-    .slot-machine { background: #000; border: 2px solid var(--1xbet-blue); border-radius: 10px; padding: 10px; text-align: center; }
-    .jackpot-banner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px; background: #080c10; padding: 5px; border-radius: 6px; }
-    .jp-item { font-size: 9px; font-weight: bold; color: var(--accent-gold); }
-    .jp-val { font-size: 10px; color: #fff; }
+    .jackpot-container { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px; }
+    .jp-box { background: #0a030d; border: 1px solid #ff2200; border-radius: 6px; padding: 2px 4px; text-align: center; }
+    .jp-box.grand { border-color: #ff3333; }
+    .jp-box.major { border-color: #33ff33; }
+    .jp-box.minor { border-color: #3399ff; }
+    .jp-box.mini { border-color: #ff33ff; }
+    .jp-title { font-size: 9px; font-weight: 900; letter-spacing: 0.5px; }
+    .jp-box.grand .jp-title { color: #ff3333; }
+    .jp-box.major .jp-title { color: #33ff33; }
+    .jp-box.minor .jp-title { color: #3399ff; }
+    .jp-box.mini .jp-title { color: #ff33ff; }
+    .jp-val { font-size: 12px; font-weight: bold; color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.8); }
 
-    .reels-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 6px; }
-    .reel-col { display: flex; flex-direction: column; gap: 4px; }
-    .symbol { aspect-ratio: 1; background: #1e2631; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .game-banner { background: linear-gradient(90deg, #ff8c00, #ffd700, #ff8c00); color: #000; font-size: 13px; font-weight: 900; padding: 2px 0; border-radius: 4px; margin-bottom: 6px; letter-spacing: 1px; text-shadow: 0 1px 0 rgba(255,255,255,0.5); }
 
-    /* Controls */
-    .controls { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-    .bet-selector { display: flex; gap: 4px; }
-    .bet-chip { padding: 6px 10px; background: #1a222d; border: 1px solid #2c3a4e; color: #fff; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-    .bet-chip.active { background: var(--1xbet-blue); border-color: var(--1xbet-blue); }
+    /* 5x4 SLOT REELS */
+    .egt-reels-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; background: #020105; padding: 4px; border: 1px solid #d4af37; border-radius: 6px; }
+    .egt-reel-col { display: flex; flex-direction: column; gap: 3px; background: #0b0714; border: 1px solid #1f1730; border-radius: 4px; padding: 2px 0; }
+    .egt-symbol { aspect-ratio: 0.85; display: flex; align-items: center; justify-content: center; font-size: 20px; background: rgba(0,0,0,0.5); border-radius: 4px; }
 
-    .spin-btn { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--1xbet-green), #1e7e34); border: none; color: #fff; font-size: 22px; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px rgba(40,167,69,0.5); }
-    .spin-btn:active { transform: scale(0.95); }
+    /* BAKIYE VE KAZANÇ PANELİ */
+    .egt-stats-bar { display: flex; justify-content: space-between; margin-top: 8px; padding: 4px 8px; background: #000; border-radius: 6px; border-top: 1px solid #333; }
+    .stat-item { text-align: center; }
+    .stat-label { font-size: 9px; color: #ffd700; font-weight: bold; }
+    .stat-value { font-size: 14px; font-weight: 900; color: #fff; }
 
-    /* Forms (Deposit/Withdraw) */
-    .form-group { margin-bottom: 12px; text-align: left; }
-    .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 4px; }
-    .form-control { width: 100%; padding: 10px; background: #131a22; border: 1px solid #283545; border-radius: 6px; color: #fff; font-size: 13px; outline: none; }
-    .action-btn { width: 100%; padding: 12px; background: var(--1xbet-green); border: none; color: #fff; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    /* İDARƏ DÜYMƏLƏRİ */
+    .egt-controls { display: flex; justify-content: space-around; align-items: center; margin-top: 10px; }
+    .circle-btn { width: 50px; height: 50px; border-radius: 50%; background: #1a1528; border: 2px solid #555; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+    .circle-btn.spin-main { width: 68px; height: 68px; background: linear-gradient(135deg, #2ed573, #10ac84); border: 3px solid #fff; font-size: 28px; box-shadow: 0 0 15px rgba(46,213,115,0.6); }
+    .circle-btn:active { transform: scale(0.92); }
+
+    .speed-toggle { background: #222; border: 1px solid #444; color: #00ff66; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-top: 6px; cursor: pointer; }
+    .speed-toggle.active { background: #00ff66; color: #000; }
+
+    /* MİNA SEÇİMİ VƏ ŞƏBƏKƏSİ */
+    .mines-dropdown-box { width: 100%; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--accent-gold); margin-bottom: 12px; }
+    .mines-dropdown-box label { font-size: 13px; font-weight: bold; color: #ddd; }
+    .mines-select { background: #0b0714; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 6px 12px; border-radius: 8px; font-size: 15px; font-weight: bold; outline: none; cursor: pointer; }
+
+    .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; margin-bottom: 12px; }
+    .mine-card { aspect-ratio: 1; background: #0a0814; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
+    .mine-card.revealed { background: #252042; }
+
+    /* POZ QAZAN BİLET QiYMƏTLƏRİ */
+    .scratch-price-selector { display: flex; gap: 8px; width: 100%; margin-bottom: 12px; }
+    .scratch-price-btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; }
+    .scratch-price-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.15); }
+
+    .scratch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 220px; margin: 12px 0; }
+    .scratch-card { width: 65px; height: 65px; background: linear-gradient(135deg, #444, #222); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; border: 1px solid var(--accent-gold); }
+    .scratch-card.revealed { background: #0a0814; }
+
+    .action-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: #000; border: none; font-size: 17px; font-weight: 800; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,140,0,0.4); transition: 0.1s; }
+    .action-btn:active { transform: scale(0.98); }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .status-msg { margin-top: 10px; font-size: 14px; min-height: 20px; font-weight: 600; color: var(--accent-gold); }
+
+    .deposit-card-box { width: 100%; background: #100b21; border: 2px dashed var(--accent-gold); border-radius: 14px; padding: 15px; margin-bottom: 15px; text-align: center; }
+    .card-number-display { font-size: 19px; font-weight: bold; color: var(--accent-gold); letter-spacing: 2px; margin: 10px 0; background: rgba(255,215,0,0.1); padding: 10px; border-radius: 8px; }
+    .copy-btn { background: var(--accent-orange); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-bottom: 5px; }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="logo">SUN<span>BET</span></div>
+    <div class="logo">☀️ SUN KAZİNO</div>
     <div class="balance-box">Balans: <span id="balance">0.00</span> AZN</div>
   </header>
 
-  <div class="nav-scroller">
-    <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slotlar</button>
-    <button class="tab-btn" onclick="switchTab('live')">🎲 Canlı Kazino</button>
-    <button class="tab-btn" onclick="switchTab('mines')">💣 Minalar</button>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('slots')">🎰 Slot</button>
+    <button class="tab-btn" onclick="switchTab('mines')">💣 Mina</button>
+    <button class="tab-btn" onclick="switchTab('scratch')">🎟️ Poz</button>
     <button class="tab-btn" onclick="switchTab('deposit')">💳 Depozit</button>
     <button class="tab-btn" onclick="switchTab('withdraw')">💸 Çıxarış</button>
+    <button class="tab-btn" onclick="switchTab('support')">💬 Dəstək</button>
   </div>
 
-  <div class="providers-bar" id="providerBar">
-    <div class="provider-chip active">Bütün Oyunlar</div>
-    <div class="provider-chip">Pragmatic Play</div>
-    <div class="provider-chip">EGT Amusnet</div>
-    <div class="provider-chip">Spinomenal</div>
-    <div class="provider-chip">Hacksaw</div>
+  <div class="bet-control" id="betControlSection">
+    <div class="bet-title">MƏRC MƏBLƏĞİ (AZN)</div>
+    <div class="bet-btns">
+      <button class="bet-btn active" onclick="setBet(1, this)">1</button>
+      <button class="bet-btn" onclick="setBet(5, this)">5</button>
+      <button class="bet-btn" onclick="setBet(10, this)">10</button>
+      <button class="bet-btn" onclick="setBet(20, this)">20</button>
+      <button class="bet-btn" onclick="setBet(50, this)">50</button>
+    </div>
   </div>
 
-  <div class="view-container">
-
-    <!-- SLOTLAR VƏ OYUN PƏNCƏRƏSİ -->
-    <div class="view active" id="slotsView">
+  <!-- 5x4 EGT SUPER HOT SLOT BÖLMƏSİ -->
+  <div class="view active" id="slotsView">
+    <div class="egt-wrapper">
       
-      <!-- Aktive Slot Maşını -->
-      <div class="slot-machine">
-        <div class="jackpot-banner">
-          <div class="jp-item">MEGA<div class="jp-val">12,450 AZN</div></div>
-          <div class="jp-item">MAJOR<div class="jp-val">3,110 AZN</div></div>
-          <div class="jp-item">MINOR<div class="jp-val">450 AZN</div></div>
-          <div class="jp-item">MINI<div class="jp-val">80 AZN</div></div>
+      <!-- JACKPOT PANELS -->
+      <div class="jackpot-container">
+        <div class="jp-box grand">
+          <div class="jp-title">GRAND</div>
+          <div class="jp-val" id="jpGrand">1 333 393.73</div>
         </div>
-
-        <div class="reels-grid">
-          <div class="reel-col" id="col0"><div class="symbol">7️⃣</div><div class="symbol">🍊</div><div class="symbol">🔔</div></div>
-          <div class="reel-col" id="col1"><div class="symbol">🍇</div><div class="symbol">7️⃣</div><div class="symbol">🍋</div></div>
-          <div class="reel-col" id="col2"><div class="symbol">🍉</div><div class="symbol">💎</div><div class="symbol">7️⃣</div></div>
-          <div class="reel-col" id="col3"><div class="symbol">🔔</div><div class="symbol">🍇</div><div class="symbol">🍊</div></div>
-          <div class="reel-col" id="col4"><div class="symbol">🍋</div><div class="symbol">🍉</div><div class="symbol">💎</div></div>
+        <div class="jp-box major">
+          <div class="jp-title">MAJOR</div>
+          <div class="jp-val" id="jpMajor">113 299.34</div>
         </div>
-
-        <div class="controls">
-          <div class="bet-selector">
-            <div class="bet-chip active" onclick="setBet(1, this)">1 AZN</div>
-            <div class="bet-chip" onclick="setBet(5, this)">5 AZN</div>
-            <div class="bet-chip" onclick="setBet(10, this)">10 AZN</div>
-          </div>
-          <button class="spin-btn" id="spinBtn" onclick="spinSlot()">⚡</button>
+        <div class="jp-box minor">
+          <div class="jp-title">MINOR</div>
+          <div class="jp-val" id="jpMinor">1 000.00</div>
+        </div>
+        <div class="jp-box mini">
+          <div class="jp-title">MINI</div>
+          <div class="jp-val" id="jpMini">200.00</div>
         </div>
       </div>
 
-      <!-- Populyar Oyun Kataloqu -->
-      <div class="casino-grid">
-        <div class="game-card">
-          <div class="live-badge">HOT</div>
-          <div style="background:#212c3a; height:100px; display:flex; align-items:center; justify-content:center; font-size:30px;">🎰</div>
-          <div class="game-title">40 Super Hot</div>
+      <div class="game-banner">40 SUPER HOT</div>
+
+      <!-- 5 REEL x 4 ROW GRID -->
+      <div class="egt-reels-grid">
+        <div class="egt-reel-col" id="col0">
+          <div class="egt-symbol">🍊</div>
+          <div class="egt-symbol">🍊</div>
+          <div class="egt-symbol">🍊</div>
+          <div class="egt-symbol">🍊</div>
         </div>
-        <div class="game-card">
-          <div class="live-badge">POPULAR</div>
-          <div style="background:#212c3a; height:100px; display:flex; align-items:center; justify-content:center; font-size:30px;">🍭</div>
-          <div class="game-title">Sweet Bonanza</div>
+        <div class="egt-reel-col" id="col1">
+          <div class="egt-symbol">🍋</div>
+          <div class="egt-symbol">🍋</div>
+          <div class="egt-symbol">🍋</div>
+          <div class="egt-symbol">🍋</div>
+        </div>
+        <div class="egt-reel-col" id="col2">
+          <div class="egt-symbol">🍇</div>
+          <div class="egt-symbol">🍇</div>
+          <div class="egt-symbol">🍇</div>
+          <div class="egt-symbol">🍇</div>
+        </div>
+        <div class="egt-reel-col" id="col3">
+          <div class="egt-symbol">🍉</div>
+          <div class="egt-symbol">🍉</div>
+          <div class="egt-symbol">🍉</div>
+          <div class="egt-symbol">🍉</div>
+        </div>
+        <div class="egt-reel-col" id="col4">
+          <div class="egt-symbol">🍇</div>
+          <div class="egt-symbol">🍇</div>
+          <div class="egt-symbol">🍇</div>
+          <div class="egt-symbol">🍇</div>
         </div>
       </div>
+
+      <!-- BAKIYE & KAZANÇ -->
+      <div class="egt-stats-bar">
+        <div class="stat-item">
+          <div class="stat-label">BAKİYE</div>
+          <div class="stat-value" id="egtBalanceDisplay">0.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">KAZANÇ</div>
+          <div class="stat-value" id="egtWinDisplay" style="color:#2ed573;">0.00</div>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="egt-controls">
+        <button class="circle-btn" onclick="playSlots()" title="Avto">🔄</button>
+        <button class="circle-btn spin-main" id="spinBtn" onclick="playSlots()">⚡</button>
+        <button class="circle-btn" onclick="playSlots()" title="Mərc">💰</button>
+      </div>
+
+      <div>
+        <button class="speed-toggle" id="speedBtn" onclick="toggleSpeed()">⏩ HIZ: NORMAL</button>
+      </div>
+
+    </div>
+    <div class="status-msg" id="slotsStatus"></div>
+  </div>
+
+  <!-- MİNA OYUNU -->
+  <div class="view" id="minesView">
+    <div class="mines-dropdown-box" id="minesConfigBox">
+      <label for="mineSelect">Minalar:</label>
+      <select id="mineSelect" class="mines-select" onchange="changeMineCount(this.value)">
+      </select>
     </div>
 
-    <!-- CANLI KAZİNO -->
-    <div class="view" id="liveView">
-      <div class="casino-grid">
-        <div class="game-card">
-          <div class="live-badge">LIVE</div>
-          <div style="background:#8b0000; height:100px; display:flex; align-items:center; justify-content:center; font-size:35px;">🎡</div>
-          <div class="game-title">Roulette Live</div>
-        </div>
-        <div class="game-card">
-          <div class="live-badge">LIVE</div>
-          <div style="background:#004d40; height:100px; display:flex; align-items:center; justify-content:center; font-size:35px;">🎴</div>
-          <div class="game-title">Blackjack VIP</div>
-        </div>
-      </div>
+    <div class="mines-grid" id="minesGrid"></div>
+    <button class="action-btn" id="minesBtn" onclick="startMines()">BAŞLA</button>
+    <div class="status-msg" id="minesStatus"></div>
+  </div>
+
+  <!-- POZ QAZAN -->
+  <div class="view" id="scratchView">
+    <div style="font-size:12px; color:#aaa; margin-bottom:6px;">BİLET QİYMƏTİ SEÇİN:</div>
+    <div class="scratch-price-selector">
+      <button class="scratch-price-btn active" onclick="setScratchTicketPrice(1, this)">1 AZN Bilet</button>
+      <button class="scratch-price-btn" onclick="setScratchTicketPrice(3, this)">3 AZN Bilet</button>
+      <button class="scratch-price-btn" onclick="setScratchTicketPrice(5, this)">5 AZN Bilet</button>
     </div>
 
-    <!-- MİNA OYUNU -->
-    <div class="view" id="minesView">
-      <div style="text-align:center; padding:20px; background:var(--card-bg); border-radius:8px;">
-        <p>Mina rejimi aktivdir</p>
-      </div>
+    <div class="scratch-grid" id="scratchGrid"></div>
+    <button class="action-btn" id="scratchBtn" onclick="startScratch()">YENİ BİLET AL (<span id="scratchCostText">1.00</span> AZN)</button>
+    <div class="status-msg" id="scratchStatus"></div>
+  </div>
+
+  <!-- DEPOZİT -->
+  <div class="view" id="depositView">
+    <div style="font-size:14px; color:#ccc; margin-bottom:10px; line-height:1.4;">
+      Balansı artırmaq üçün aşağıdakı kart hesabına ödəniş edin:
     </div>
 
-    <!-- DEPOZİT -->
-    <div class="view" id="depositView">
-      <div class="form-group">
-        <label>Ödəniş Üsulu</label>
-        <select class="form-control">
-          <option>Bank Kartı (MilliKart / Birkart)</option>
-          <option>eManat / M10</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Məbləğ (AZN)</label>
-        <input type="number" class="form-control" value="10">
-      </div>
-      <button class="action-btn">DEPOZİT EDİN</button>
+    <div class="deposit-card-box">
+      <div style="font-size:12px; color:#888;">ÖDƏNİŞ KARTI (AZN):</div>
+      <div class="card-number-display" id="myCardNum">4169 7388 7894 8672</div>
+      <button class="copy-btn" onclick="copyCard()">KART NÖMRƏSİNİ KOPYALA</button>
     </div>
 
-    <!-- ÇIXARIŞ -->
-    <div class="view" id="withdrawView">
-      <div class="form-group">
-        <label>Kart Nömrəsi</label>
-        <input type="text" class="form-control" placeholder="4169 **** **** ****">
-      </div>
-      <div class="form-group">
-        <label>Çıxarış Məbləği (Min. 15 AZN)</label>
-        <input type="number" class="form-control" value="15">
-      </div>
-      <button class="action-btn" style="background:var(--1xbet-blue);">ÇIXARIŞ TƏLƏB ET</button>
+    <div style="width:100%; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Köçürdüyünüz Məbləğ (AZN):</div>
+    <input type="number" id="payAmountInput" value="20" min="1" style="width:100%; padding:12px; background:#0a0814; border:1px solid var(--accent-gold); border-radius:8px; color:#fff; font-size:16px; font-weight:bold; margin-bottom:15px;">
+
+    <button class="action-btn" style="background:var(--green-btn); color:#000;" onclick="submitDepositRequest()">ÖDƏMƏNİ TƏSDİQLƏ</button>
+    <div class="status-msg" id="depStatus"></div>
+  </div>
+
+  <!-- ÇIXARIŞ -->
+  <div class="view" id="withdrawView">
+    <div style="font-size:13px; color:#ccc; margin-bottom:12px; line-height:1.4;">
+      Qazandığınız vəsaiti çıxarmaq üçün kart məlumatlarınızı daxil edin.<br><b style="color:var(--accent-gold);">Minimum çıxarış: 30 AZN</b>
     </div>
 
+    <div style="width:100%; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Kart Nömrəniz:</div>
+    <input type="text" id="withdrawCardInput" placeholder="4169 0000 0000 0000" maxlength="19" style="width:100%; padding:12px; background:#0a0814; border:1px solid var(--accent-gold); border-radius:8px; color:#fff; font-size:15px; margin-bottom:12px; outline:none;">
+
+    <div style="width:100%; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Məbləğ (AZN):</div>
+    <input type="number" id="withdrawAmountInput" value="30" min="30" style="width:100%; padding:12px; background:#0a0814; border:1px solid var(--accent-gold); border-radius:8px; color:#fff; font-size:16px; font-weight:bold; margin-bottom:15px; outline:none;">
+
+    <button class="action-btn" style="background:linear-gradient(135deg, #ff4757, #ff6b81); color:#fff;" onclick="submitWithdrawRequest()">ÇIXARIŞ TƏLƏB ET</button>
+    <div class="status-msg" id="withdrawStatus"></div>
+  </div>
+
+  <!-- 7/24 DƏSTƏK -->
+  <div class="view" id="supportView">
+    <div style="font-size:13px; color:#ccc; margin-bottom:12px; line-height:1.4;">
+      🎧 <b>7/24 Canlı Dəstək Xidməti</b><br>Suallarınızı və ya yarandığı halda depozit/çıxarış problemlərinizi dərhal göndərin.
+    </div>
+
+    <div style="width:100%; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Mesajınız:</div>
+    <textarea id="supportMsgInput" placeholder="Probleminizi və ya sualınızı bura yazın..." rows="4" style="width:100%; padding:12px; background:#0a0814; border:1px solid var(--accent-gold); border-radius:8px; color:#fff; font-size:14px; margin-bottom:12px; outline:none; resize:none;"></textarea>
+
+    <button class="action-btn" style="background:linear-gradient(135deg, #3742fa, #5352ed); color:#fff; margin-bottom:12px;" onclick="submitSupportRequest()">MESAJI GÖNDƏR</button>
+
+    <div style="font-size:12px; color:#888; margin-bottom:8px;">və ya birbaşa Telegram meneceri ilə əlaqə saxlayın:</div>
+    <button class="action-btn" style="background:rgba(255,255,255,0.08); border:1px solid var(--accent-gold); color:var(--accent-gold); font-size:14px; padding:10px;" onclick="openTelegramAdmin()">💬 Telegram Menecerə Yaz</button>
+
+    <div class="status-msg" id="supportStatus"></div>
   </div>
 
   <script>
     const tg = window.Telegram?.WebApp;
-    if(tg) tg.expand();
-
-    let balance = 100.00;
-    let currentBet = 1;
-    const symbols = ['7️⃣', '🍊', '🔔', '🍇', '🍋', '🍉', '💎'];
-
-    function updateBalance() {
-      document.getElementById('balance').innerText = balance.toFixed(2);
+    if(tg) {
+      tg.expand();
+      tg.ready();
     }
-    updateBalance();
+
+    const BOT_TOKEN = "8836417399:AAHySYind-48Td8EvxW3-i-WLTwxE-ey5so";
+    const ADMIN_CHAT_ID = "7723256649";
+    const ADMIN_USERNAME = "admin_username";
+
+    const firebaseConfig = {
+      databaseURL: "https://sunkazino-default-rtdb.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const user = tg?.initDataUnsafe?.user;
+    const userId = user?.id ? String(user.id) : 'demo_user';
+
+    let balance = 0.00;
+
+    db.ref(`users/${userId}/balance`).on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val !== null && val !== undefined) {
+        balance = parseFloat(val);
+        updateBalanceUI();
+      }
+    });
+
+    function saveBalanceToDB(newBal) {
+      db.ref(`users/${userId}/balance`).set(newBal);
+    }
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioCtx();
+
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'click') {
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      } else if (type === 'win') {
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'lose') {
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      }
+    }
+
+    let currentBet = 1;
+    let selectedMinesCount = 1;
+    let scratchTicketPrice = 1;
+    let spinSpeed = 60; // Spin hızı ms
+
+    const selectElem = document.getElementById('mineSelect');
+    for (let i = 1; i <= 24; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.innerHTML = i;
+      selectElem.appendChild(opt);
+    }
+
+    function updateBalanceUI() {
+      document.getElementById('balance').innerText = balance.toFixed(2);
+      const egtBal = document.getElementById('egtBalanceDisplay');
+      if (egtBal) egtBal.innerText = balance.toFixed(2);
+    }
+
+    function setBet(amount, btn) {
+      playSound('click');
+      currentBet = amount;
+      document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function changeMineCount(val) {
+      if (minesState.active) return;
+      playSound('click');
+      selectedMinesCount = parseInt(val);
+    }
+
+    function setScratchTicketPrice(price, btn) {
+      playSound('click');
+      scratchTicketPrice = price;
+      document.querySelectorAll('.scratch-price-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('scratchCostText').innerText = price.toFixed(2);
+    }
 
     function switchTab(tab) {
+      playSound('click');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       
-      event.target.classList.add('active');
+      const targetBtn = document.querySelector(`[onclick="switchTab('${tab}')"]`);
+      if(targetBtn) targetBtn.classList.add('active');
+      
       document.getElementById(tab + 'View').classList.add('active');
+
+      document.getElementById('betControlSection').style.display = (tab === 'slots' || tab === 'mines') ? 'block' : 'none';
     }
 
-    function setBet(amount, element) {
-      currentBet = amount;
-      document.querySelectorAll('.bet-chip').forEach(c => c.classList.remove('active'));
-      element.classList.add('active');
-    }
-
-    function spinSlot() {
-      if(balance < currentBet) {
-        alert('Balansınız kifayət etmir!');
-        return;
+    function checkBalanceOrRedirect(requiredAmount) {
+      if (balance < requiredAmount) {
+        playSound('lose');
+        alert('Balansınız kifayət etmir! Lütfən balansı artırın.');
+        switchTab('deposit');
+        return false;
       }
+      return true;
+    }
+
+    function toggleSpeed() {
+      const btn = document.getElementById('speedBtn');
+      if (spinSpeed === 60) {
+        spinSpeed = 20;
+        btn.innerText = '⚡ HIZ: FAST';
+        btn.classList.add('active');
+      } else {
+        spinSpeed = 60;
+        btn.innerText = '⏩ HIZ: NORMAL';
+        btn.classList.remove('active');
+      }
+    }
+
+    // Live Jackpot Ticker
+    setInterval(() => {
+      let g = parseFloat(document.getElementById('jpGrand').innerText.replace(/\s/g,''));
+      document.getElementById('jpGrand').innerText = (g + 0.05).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }, 2000);
+
+    /* --- 5x4 EGT SLOT GAME --- */
+    const egtSymbols = ['🍊', '🍋', '🍇', '🍉', '🔔', '7️⃣', '🔔', '🍇'];
+
+    function playSlots() {
+      if (!checkBalanceOrRedirect(currentBet)) return;
 
       balance -= currentBet;
-      updateBalance();
+      saveBalanceToDB(balance);
+      playSound('click');
 
       const spinBtn = document.getElementById('spinBtn');
       spinBtn.disabled = true;
+      document.getElementById('slotsStatus').innerText = 'Fırlanır...';
+      document.getElementById('egtWinDisplay').innerText = "0.00";
 
-      let spins = 0;
-      const interval = setInterval(() => {
-        for(let col = 0; col < 5; col++) {
+      let count = 0;
+      const maxCount = spinSpeed === 20 ? 8 : 16;
+
+      const timer = setInterval(() => {
+        let gridResult = [];
+
+        for (let col = 0; col < 5; col++) {
+          let colSymbols = [];
           const colElem = document.getElementById(`col${col}`);
           colElem.innerHTML = '';
-          for(let row = 0; row < 3; row++) {
-            const sym = symbols[Math.floor(Math.random() * symbols.length)];
+
+          for (let row = 0; row < 4; row++) {
+            const sym = egtSymbols[Math.floor(Math.random() * egtSymbols.length)];
+            colSymbols.push(sym);
+
             const div = document.createElement('div');
-            div.className = 'symbol';
+            div.className = 'egt-symbol';
             div.innerText = sym;
             colElem.appendChild(div);
           }
+          gridResult.push(colSymbols);
         }
-        spins++;
-        if(spins > 10) {
-          clearInterval(interval);
+
+        count++;
+        if (count > maxCount) {
+          clearInterval(timer);
           spinBtn.disabled = false;
-          
-          // Təsadüfi uduş məntiqi
-          if(Math.random() > 0.6) {
-            let win = currentBet * 2;
-            balance += win;
-            updateBalance();
-            alert(`Uduş! +${win} AZN`);
+
+          let flatGrid = gridResult.flat();
+          let symbolCounts = {};
+          flatGrid.forEach(s => symbolCounts[s] = (symbolCounts[s] || 0) + 1);
+
+          let maxMatch = Math.max(...Object.values(symbolCounts));
+          let totalWin = 0;
+
+          if (maxMatch >= 8) {
+            totalWin = currentBet * 25;
+            document.getElementById('slotsStatus').innerText = `🔥 CEKPOT UDUŞU! +${totalWin.toFixed(2)} AZN! 🎉`;
+          } else if (maxMatch >= 6) {
+            totalWin = currentBet * 8;
+            document.getElementById('slotsStatus').innerText = `💥 BÖYÜK UDUŞ! +${totalWin.toFixed(2)} AZN! 🎉`;
+          } else if (maxMatch >= 4) {
+            totalWin = currentBet * 2.5;
+            document.getElementById('slotsStatus').innerText = `✨ QAZANDINIZ! +${totalWin.toFixed(2)} AZN!`;
+          } else {
+            playSound('lose');
+            document.getElementById('slotsStatus').innerText = 'Şansınızı bir daha sınayın!';
+          }
+
+          if (totalWin > 0) {
+            balance += totalWin;
+            saveBalanceToDB(balance);
+            playSound('win');
+            document.getElementById('egtWinDisplay').innerText = totalWin.toFixed(2);
           }
         }
-      }, 80);
+      }, spinSpeed);
+    }
+
+    /* --- MİNA OYUNU --- */
+    let minesState = { active: false, bombs: [], openedCount: 0, currentMultiplier: 1.0 };
+    
+    function calculateMinesMultiplier(opened, mines) {
+      let prob = 1.0;
+      for (let i = 0; i < opened; i++) {
+        prob *= (25 - mines - i) / (25 - i);
+      }
+      return (1 / prob) * 0.96;
+    }
+
+    function initMinesGrid() {
+      const grid = document.getElementById('minesGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const card = document.createElement('div');
+        card.className = 'mine-card';
+        card.onclick = () => revealMine(i, card);
+        grid.appendChild(card);
+      }
+    }
+    initMinesGrid();
+
+    function startMines() {
+      const btn = document.getElementById('minesBtn');
+      if (minesState.active) {
+        const win = currentBet * minesState.currentMultiplier;
+        balance += win;
+        saveBalanceToDB(balance);
+        playSound('win');
+        document.getElementById('minesStatus').innerText = `Nağdlaşdırıldı: +${win.toFixed(2)} AZN`;
+        endMines();
+        return;
+      }
+
+      if (!checkBalanceOrRedirect(currentBet)) return;
+
+      balance -= currentBet;
+      saveBalanceToDB(balance);
+      playSound('click');
+
+      minesState = { active: true, bombs: [], openedCount: 0, currentMultiplier: 1.0 };
+      
+      while(minesState.bombs.length < selectedMinesCount) {
+        let r = Math.floor(Math.random() * 25);
+        if(!minesState.bombs.includes(r)) minesState.bombs.push(r);
+      }
+
+      initMinesGrid();
+      document.getElementById('mineSelect').disabled = true;
+      btn.innerText = `NAĞDLAŞDIR (${currentBet.toFixed(2)} AZN)`;
+      document.getElementById('minesStatus').innerText = `${selectedMinesCount} Mina gizlədildi. Xanaları seçin!`;
+    }
+
+    function revealMine(index, card) {
+      if(!minesState.active || card.classList.contains('revealed')) return;
+
+      card.classList.add('revealed');
+      if (minesState.bombs.includes(index)) {
+        card.innerText = '💣';
+        playSound('lose');
+        document.getElementById('minesStatus').innerText = 'Mina partladı! Uduzdunuz.';
+        
+        document.querySelectorAll('.mine-card').forEach((c, i) => {
+          if (minesState.bombs.includes(i)) {
+            c.innerText = '💣';
+            c.classList.add('revealed');
+          }
+        });
+        endMines();
+      } else {
+        card.innerText = '💎';
+        playSound('click');
+        minesState.openedCount++;
+        
+        minesState.currentMultiplier = calculateMinesMultiplier(minesState.openedCount, selectedMinesCount);
+        const currentWin = currentBet * minesState.currentMultiplier;
+        
+        document.getElementById('minesBtn').innerText = `NAĞDLAŞDIR (${currentWin.toFixed(2)} AZN - x${minesState.currentMultiplier.toFixed(2)})`;
+      }
+    }
+
+    function endMines() {
+      minesState.active = false;
+      document.getElementById('mineSelect').disabled = false;
+      document.getElementById('minesBtn').innerText = 'YENİDƏN BAŞLA';
+    }
+
+    /* --- POZ QAZAN --- */
+    let scratchItems = [];
+    let revealedScratch = 0;
+
+    function initEmptyScratchGrid() {
+      const grid = document.getElementById('scratchGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const card = document.createElement('div');
+        card.className = 'scratch-card';
+        card.innerText = '❓';
+        grid.appendChild(card);
+      }
+      document.getElementById('scratchStatus').innerText = 'Oynamaq üçün "YENİ BİLET AL" düyməsinə basın';
+    }
+    initEmptyScratchGrid();
+
+    function startScratch() {
+      if (!checkBalanceOrRedirect(scratchTicketPrice)) return;
+
+      balance -= scratchTicketPrice;
+      saveBalanceToDB(balance);
+      playSound('click');
+
+      scratchItems = [];
+      revealedScratch = 0;
+
+      const isWin = Math.random() <= 0.35; 
+
+      if (isWin) {
+        const winSym = egtSymbols[Math.floor(Math.random() * egtSymbols.length)];
+        scratchItems = [winSym, winSym, winSym, '🍎', '🍌', '🍇', '🍓', '🍋', '🔔'];
+      } else {
+        scratchItems = ['🍎', '🍎', '🍌', '🍌', '🍇', '🍇', '🍓', '🍓', '🍋'];
+      }
+
+      scratchItems.sort(() => Math.random() - 0.5);
+
+      const grid = document.getElementById('scratchGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const card = document.createElement('div');
+        card.className = 'scratch-card';
+        card.innerText = '❓';
+        card.onclick = () => scratchCard(i, card);
+        grid.appendChild(card);
+      }
+
+      document.getElementById('scratchStatus').innerText = 'Xanaları pozun (3 eyni simvol = Uduş)';
+    }
+
+    function scratchCard(index, card) {
+      if (card.classList.contains('revealed')) return;
+
+      card.classList.add('revealed');
+      card.innerText = scratchItems[index];
+      playSound('click');
+      revealedScratch++;
+
+      if (revealedScratch === 9) {
+        const counts = {};
+        scratchItems.forEach(item => counts[item] = (counts[item] || 0) + 1);
+        let won = false;
+
+        for (let item in counts) {
+          if (counts[item] >= 3) { won = true; break; }
+        }
+
+        if (won) {
+          const winMultiplier = 5; 
+          const win = scratchTicketPrice * winMultiplier;
+          balance += win;
+          saveBalanceToDB(balance);
+          playSound('win');
+          document.getElementById('scratchStatus').innerText = `🎉 3 EYNİ SİMVOL! +${win.toFixed(2)} AZN QAZANDINIZ!`;
+        } else {
+          playSound('lose');
+          document.getElementById('scratchStatus').innerText = 'Uduş olmadı, bir daha sınayın.';
+        }
+      }
+    }
+
+    /* --- DEPOZİT SİSTEMİ --- */
+    function copyCard() {
+      const cardNum = document.getElementById('myCardNum').innerText.replace(/\s+/g, '');
+      navigator.clipboard.writeText(cardNum);
+      alert('Kart nömrəsi kopyalandı!');
+    }
+
+    function submitDepositRequest() {
+      const amount = parseFloat(document.getElementById('payAmountInput').value);
+      if (isNaN(amount) || amount < 1) {
+        alert('Düzgün məbləğ daxil edin!');
+        return;
+      }
+
+      const username = user?.username ? `@${user.username}` : (user?.first_name || 'İstifadəçi');
+      const messageText = `💳 <b>YENİ DEPOZİT SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💰 <b>Məbləğ:</b> ${amount} AZN`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: `✅ Təsdiqlə (+${amount} AZN)`, callback_data: `approve_${userId}_${amount}` },
+            { text: `❌ İmtina et`, callback_data: `reject_${userId}` }
+          ]
+        ]
+      };
+
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML',
+          reply_markup: keyboard
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.ok) {
+          document.getElementById('depStatus').innerText = `Sorğu adminə göndərildi! Pulu köçürdünüzsə, az sonra balansınız artırılacaq.`;
+          playSound('win');
+        } else {
+          alert('Xəta! Bot-a Telegram-da /start düyməsini basın.');
+        }
+      })
+      .catch(err => {
+        alert('Şəbəkə xətası baş verdi.');
+      });
+    }
+
+    /* --- ÇIXARIŞ SİSTEMİ (MIN: 30 AZN) --- */
+    function submitWithdrawRequest() {
+      const cardNum = document.getElementById('withdrawCardInput').value.trim();
+      const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
+
+      if (!cardNum || cardNum.length < 15) {
+        alert('Lütfən düzgün kart nömrəsi daxil edin!');
+        return;
+      }
+
+      if (isNaN(amount) || amount < 30) {
+        alert('Minimum çıxarış məbləği 30 AZN-dir!');
+        return;
+      }
+
+      if (amount > balance) {
+        alert('Balansınızda kifayət qədər vəsait yoxdur!');
+        return;
+      }
+
+      balance -= amount;
+      saveBalanceToDB(balance);
+
+      const username = user?.username ? `@${user.username}` : (user?.first_name || 'İstifadəçi');
+      const messageText = `💸 <b>YENİ ÇIXARIŞ SORĞUSU</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n💳 <b>Kart:</b> <code>${cardNum}</code>\n💰 <b>Çıxarış Məbləği:</b> ${amount} AZN`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: `✅ Ödənildi`, callback_data: `paid_${userId}_${amount}` },
+            { text: `❌ İmtina et (Balansa qaytar)`, callback_data: `refund_${userId}_${amount}` }
+          ]
+        ]
+      };
+
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML',
+          reply_markup: keyboard
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.ok) {
+          document.getElementById('withdrawStatus').innerText = `Çıxarış sorğusu adminə göndərildi! Qısa zamanda emal olunacaq.`;
+          playSound('win');
+          document.getElementById('withdrawCardInput').value = '';
+        } else {
+          alert('Xəta baş verdi! Bot-a /start düyməsini basdığınızdan əmin olun.');
+        }
+      })
+      .catch(err => {
+        alert('Şəbəkə xətası baş verdi.');
+      });
+    }
+
+    /* --- 7/24 DƏSTƏK SİSTEMİ --- */
+    function submitSupportRequest() {
+      const msg = document.getElementById('supportMsgInput').value.trim();
+      if (!msg) {
+        alert('Lütfən mesajınızı daxil edin!');
+        return;
+      }
+
+      const username = user?.username ? `@${user.username}` : (user?.first_name || 'İstifadəçi');
+      const messageText = `💬 <b>YENİ DƏSTƏK SORĞUSU (7/24)</b>\n\n👤 <b>İstifadəçi:</b> ${username}\n🆔 <b>User ID:</b> <code>${userId}</code>\n📝 <b>Mesaj:</b>\n${msg}`;
+
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.ok) {
+          document.getElementById('supportStatus').innerText = `Mesajınız adminə göndərildi! Qısa zamanda sizinlə əlaqə saxlanılacaq.`;
+          playSound('win');
+          document.getElementById('supportMsgInput').value = '';
+        } else {
+          alert('Xəta baş verdi! Bot-a /start düyməsini basdığınızdan əmin olun.');
+        }
+      })
+      .catch(err => {
+        alert('Şəbəkə xətası baş verdi.');
+      });
+    }
+
+    function openTelegramAdmin() {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(`https://t.me/${ADMIN_USERNAME}`);
+      } else {
+        window.open(`https://t.me/${ADMIN_USERNAME}`, '_blank');
+      }
     }
   </script>
 </body>
