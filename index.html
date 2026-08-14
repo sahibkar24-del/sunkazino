@@ -3,224 +3,155 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sun Kazino - Qızıl 40</title>
+  <title>Sun Kazino - Qızıl 100</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     :root {
-      --bg-main: #060312;
-      --card-bg: #12092c;
-      --accent-gold: #ffd700;
-      --accent-blue: #2a3493;
-      --neon-cyan: #00f0ff;
-      --text-gold: #fcc201;
+      --bg-dark: #080314;
+      --card-bg: #150933;
+      --gold-main: #ffd700;
+      --gold-dark: #b8860b;
+      --cyan-neon: #00f0ff;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
-    body { background: var(--bg-main); color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; overflow-x: hidden; }
+    body { background: var(--bg-dark); color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; overflow-x: hidden; }
 
     /* HEADER */
-    .top-bar { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
-    .menu-btn { background: #1a103c; border: 2px solid #5d48a8; color: #fff; font-size: 20px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .game-logo { font-size: 22px; font-weight: 900; color: #38b6ff; text-transform: uppercase; text-shadow: 0 0 10px #0066ff, 2px 2px #000; letter-spacing: 1px; }
+    .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #23124a; }
+    .logo { font-size: 20px; font-weight: 900; color: var(--gold-main); text-transform: uppercase; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+    .provider { font-size: 10px; color: #8c73c7; background: #1a0b3b; padding: 3px 8px; border-radius: 6px; border: 1px solid #3d227c; }
 
-    /* JACKPOT COUNTERS */
-    .jackpot-container { width: 100%; max-width: 420px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
-    .jackpot-box { background: rgba(10, 5, 30, 0.9); border-radius: 8px; padding: 4px; text-align: center; position: relative; border: 1.5px solid #28205c; }
-    .jackpot-title { font-size: 10px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 4px #000; }
-    .jackpot-val { font-size: 15px; font-weight: 800; color: #fff; }
-    
-    .jp-meqa { border-color: #ff2a2a; } .jp-meqa .jackpot-title { color: #ff2a2a; }
-    .jp-boyuk { border-color: #00ff44; } .jp-boyuk .jackpot-title { color: #00ff44; }
-    .jp-orta { border-color: #00d9ff; } .jp-orta .jackpot-title { color: #00d9ff; }
-    .jp-kicik { border-color: #ff00ea; } .jp-kicik .jackpot-title { color: #ff00ea; }
+    /* GAME TITLE & JACKPOT */
+    .title-card { width: 100%; max-width: 400px; background: linear-gradient(180deg, #2a115c, #13072b); border: 2px solid var(--gold-main); border-radius: 12px; padding: 12px; text-align: center; margin: 12px 0; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+    .game-name { font-size: 26px; font-weight: 900; color: #fff; text-shadow: 0 0 8px var(--cyan-neon); letter-spacing: 1px; }
+    .top-prize { font-size: 13px; color: var(--gold-main); margin-top: 4px; font-weight: bold; }
 
-    /* LOGO CENTER */
-    .center-badge { width: 100%; max-width: 420px; text-align: center; margin: 4px 0; }
-    .center-badge-inner { display: inline-block; background: linear-gradient(180deg, #ffd700, #b8860b); color: #000; font-weight: 900; font-size: 13px; padding: 2px 15px; border-radius: 12px; border: 1px solid #fff; box-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+    /* SCRATCH CARD CONTAINER (3x3) */
+    .scratch-card { width: 100%; max-width: 400px; background: #13072b; border: 2px solid #361b78; border-radius: 16px; padding: 15px; box-shadow: inset 0 0 20px #000; }
+    .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
 
-    /* SLOT FRAME (5x4) */
-    .slot-frame { width: 100%; max-width: 420px; background: #08031a; border: 2px solid #201a5e; border-radius: 12px; padding: 6px; box-shadow: inset 0 0 20px #000, 0 0 15px rgba(40, 32, 92, 0.5); }
-    .slot-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; }
-    .slot-cell { aspect-ratio: 0.85; background: radial-gradient(circle, #1a0f3d 0%, #090317 100%); border: 1px solid #2d2269; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 26px; text-shadow: 0 2px 5px #000; position: relative; }
-    .slot-cell.gold-bg { background: radial-gradient(circle, #ffe600 0%, #996600 100%); border-color: #fff; }
+    .scratch-box {
+      aspect-ratio: 1;
+      background: radial-gradient(circle, #2d1663 0%, #150933 100%);
+      border: 2px solid #4a279c;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--gold-main);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .scratch-box:active { transform: scale(0.96); }
 
-    /* WIN DISPLAY */
-    .win-display { margin-top: 10px; text-align: center; }
-    .win-label { font-size: 11px; color: #8a81b8; font-weight: bold; text-transform: uppercase; }
-    .win-amount { font-size: 26px; font-weight: 900; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+    /* COVER LAYER */
+    .cover-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 22px;
+      font-weight: 900;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      box-shadow: inset 0 0 10px rgba(255,255,255,0.6);
+    }
 
-    /* CONTROLS (BOTTOM) */
-    .controls-bar { width: 100%; max-width: 420px; display: flex; justify-content: space-around; align-items: center; margin-top: 10px; }
-    .ctrl-btn { width: 55px; height: 55px; border-radius: 50%; background: linear-gradient(145deg, #24195d, #0d0826); border: 2px solid #5142a3; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-    .ctrl-btn:active { transform: scale(0.95); }
-    
-    .spin-btn-main { width: 75px; height: 75px; border-radius: 50%; background: radial-gradient(circle, #ffffff 0%, #a0a0a0 100%); border: 4px solid #38b6ff; color: #000; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; box-shadow: 0 0 20px rgba(56, 182, 255, 0.8); }
-    .spin-btn-main:active { transform: scale(0.92); }
+    .scratch-box.revealed .cover-layer {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.8);
+    }
 
-    .status-bar { width: 100%; max-width: 420px; display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; font-weight: bold; padding: 0 10px; }
-    .status-item { text-align: left; }
-    .status-item span { display: block; font-size: 14px; color: var(--accent-gold); }
+    .scratch-box.winner {
+      border-color: #00ff66;
+      background: radial-gradient(circle, #005c21 0%, #092b13 100%);
+      box-shadow: 0 0 12px #00ff66;
+    }
 
-    /* MODAL WINDOWS */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-    .modal-overlay.active { display: flex; }
-    .modal-content { width: 90%; max-width: 380px; background: #0c0621; border: 2px solid #3d2f85; border-radius: 16px; padding: 20px; text-align: center; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.9); }
-    .modal-close { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: #23174f; border: 1px solid #5844a8; color: #fff; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    /* WIN & ACTION DISPLAY */
+    .win-box { margin: 15px 0; text-align: center; }
+    .win-title { font-size: 11px; color: #a18cd1; text-transform: uppercase; font-weight: bold; }
+    .win-val { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 0 10px var(--gold-main); }
 
-    .modal-title { font-size: 18px; font-weight: 900; margin-bottom: 15px; color: #fff; letter-spacing: 1px; }
+    /* CONTROLS */
+    .actions-bar { width: 100%; max-width: 400px; display: flex; gap: 10px; margin-bottom: 15px; }
+    .btn-action {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .btn-buy { background: linear-gradient(180deg, #00f0ff, #0066ff); color: #000; }
+    .btn-reveal { background: linear-gradient(180deg, #ffd700, #b8860b); color: #000; }
+    .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .bets-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .bet-opt-btn { background: #180d42; border: 1.5px solid #3d2f85; color: #fff; padding: 12px 4px; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; }
-    .bet-opt-btn.active { background: #2ed573; color: #000; border-color: #fff; }
-
-    .auto-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .auto-opt-btn { background: #130a36; border: 1.5px solid #2a3493; color: #fff; padding: 14px 0; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; }
-
-    /* RULES MODAL STYLES */
-    .rules-body { text-align: left; max-height: 350px; overflow-y: auto; font-size: 12px; color: #ccc; line-height: 1.4; padding-right: 5px; }
-    .rules-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 11px; text-align: center; }
-    .rules-table th, .rules-table td { border: 1px solid #2a3493; padding: 6px; }
-    .rules-table th { background: #180d42; color: var(--accent-gold); }
+    /* BOTTOM STATUS */
+    .footer-bar { width: 100%; max-width: 400px; display: flex; justify-content: space-between; background: #13072b; padding: 12px 16px; border-radius: 10px; border: 1px solid #2d1663; font-size: 13px; font-weight: bold; }
+    .val-highlight { color: var(--gold-main); font-size: 15px; }
   </style>
 </head>
 <body>
 
-  <!-- TOP BAR -->
-  <div class="top-bar">
-    <button class="menu-btn" onclick="openModal('rulesModal')">ℹ️</button>
-    <div class="game-logo">SUN KAZİNO</div>
-    <div style="width: 40px;"></div>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">SUN KAZİNO</div>
+    <div class="provider">QUAD SEVEN</div>
   </div>
 
-  <!-- JACKPOT COUNTERS (Şəkil 9-11 dizaynı) -->
-  <div class="jackpot-container">
-    <div class="jackpot-box jp-meqa">
-      <div class="jackpot-title">MEQA</div>
-      <div class="jackpot-val" id="jpMeqa">1,442,654.92</div>
-    </div>
-    <div class="jackpot-box jp-boyuk">
-      <div class="jackpot-title">BÖYÜK</div>
-      <div class="jackpot-val" id="jpBoyuk">1,442,660.84</div>
-    </div>
-    <div class="jackpot-box jp-orta">
-      <div class="jackpot-title">ORTA</div>
-      <div class="jackpot-val">100.00</div>
-    </div>
-    <div class="jackpot-box jp-kicik">
-      <div class="jackpot-title">KİÇİK</div>
-      <div class="jackpot-val">20.00</div>
+  <!-- TITLE BANNER -->
+  <div class="title-card">
+    <div class="game-name">QIZIL 100</div>
+    <div class="top-prize">MÜŞABİH 3 MƏBLƏĞİ TAP - UDUŞU QAZAN!</div>
+  </div>
+
+  <!-- E-POZ CARD (3x3 GRID) -->
+  <div class="scratch-card">
+    <div class="grid-3x3" id="scratchGrid">
+      <!-- 9 Xanalar JS vasitəsilə doldurulur -->
     </div>
   </div>
 
-  <div class="center-badge">
-    <div class="center-badge-inner">QIZIL MƏDƏNİ 40</div>
+  <!-- WIN AMOUNT -->
+  <div class="win-box">
+    <div class="win-title">SON UDUŞ</div>
+    <div class="win-val" id="winDisplay">0.00 AZN</div>
   </div>
 
-  <!-- 5x4 SLOT GRID -->
-  <div class="slot-frame">
-    <div class="slot-grid" id="slotGrid">
-      <!-- 20 ədəd xana JS tərəfindən doldurulacaq -->
-    </div>
+  <!-- ACTION BUTTONS -->
+  <div class="actions-bar">
+    <button class="btn-action btn-buy" id="buyBtn" onclick="buyTicket()">BİLET AL (1 AZN)</button>
+    <button class="btn-action btn-reveal" id="revealBtn" onclick="revealAll()" disabled>HAMISINI AÇ</button>
   </div>
 
-  <!-- WIN DISPLAY -->
-  <div class="win-display">
-    <div class="win-label">SON UDUŞ (AZN)</div>
-    <div class="win-amount" id="lastWin">0.00</div>
-  </div>
-
-  <!-- CONTROLS -->
-  <div class="controls-bar">
-    <button class="ctrl-btn" onclick="openModal('betModal')">
-      🪙
-      <span style="font-size: 8px; margin-top:2px;">MƏRC</span>
-    </button>
-    
-    <button class="spin-btn-main" id="spinBtn" onclick="handleSpin()">↻</button>
-    
-    <button class="ctrl-btn" onclick="openModal('autoModal')">
-      🔄
-      <span style="font-size: 8px; margin-top:2px;">AVTO</span>
-    </button>
-  </div>
-
-  <!-- STATUS FOOTER -->
-  <div class="status-bar">
-    <div class="status-item">BALANS (AZN) <span id="balanceDisplay">100.00</span></div>
-    <div class="status-item" style="text-align: right;">MƏRC (AZN) <span id="betDisplay">1.00</span></div>
-  </div>
-
-  <!-- MODAL 1: MƏRC MENYUSU (Şəkil 10) -->
-  <div class="modal-overlay" id="betModal">
-    <div class="modal-content">
-      <div class="modal-close" onclick="closeModal('betModal')">✕</div>
-      <div class="modal-title">MƏRC (AZN)</div>
-      <div class="bets-grid">
-        <button class="bet-opt-btn" onclick="selectBet(0.20)">0.20</button>
-        <button class="bet-opt-btn" onclick="selectBet(0.50)">0.50</button>
-        <button class="bet-opt-btn active" onclick="selectBet(1.00)">1.00</button>
-        <button class="bet-opt-btn" onclick="selectBet(2.00)">2.00</button>
-        <button class="bet-opt-btn" onclick="selectBet(3.00)">3.00</button>
-        <button class="bet-opt-btn" onclick="selectBet(5.00)">5.00</button>
-        <button class="bet-opt-btn" onclick="selectBet(10.00)">10.00</button>
-        <button class="bet-opt-btn" onclick="selectBet(20.00)">20.00</button>
-        <button class="bet-opt-btn" onclick="selectBet(30.00)">30.00</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 2: AVTO OYUN MENYUSU (Şəkil 9) -->
-  <div class="modal-overlay" id="autoModal">
-    <div class="modal-content">
-      <div class="modal-close" onclick="closeModal('autoModal')">✕</div>
-      <div class="modal-title">AVTO OYUN</div>
-      <div class="auto-grid">
-        <button class="auto-opt-btn" onclick="startAutoSpins(5)">5</button>
-        <button class="auto-opt-btn" onclick="startAutoSpins(10)">10</button>
-        <button class="auto-opt-btn" onclick="startAutoSpins(15)">15</button>
-        <button class="auto-opt-btn" onclick="startAutoSpins(20)">20</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 3: QAYDALAR VƏ MƏLUMAT (Şəkil 12, 13, 14) -->
-  <div class="modal-overlay" id="rulesModal">
-    <div class="modal-content">
-      <div class="modal-close" onclick="closeModal('rulesModal')">✕</div>
-      <div class="modal-title" style="color:var(--accent-gold);">OYUN QAYDALARI</div>
-      <div class="rules-body">
-        <p style="margin-bottom:8px;"><b>"QIZIL 40"</b> WILD simvolu, KÜLÇƏ simvolu və CEKPOT funksiyası olan virtual ani lotereya oyunudur.</p>
-        
-        <div style="font-weight:bold; color:#fff; margin-top:10px;">Uduş Əmsalları:</div>
-        <table class="rules-table">
-          <tr>
-            <th>Simvol</th>
-            <th>3 ədəd</th>
-            <th>4 ədəd</th>
-            <th>5 ədəd</th>
-          </tr>
-          <tr> <td>7️⃣ WILD</td> <td>x0.8</td> <td>x8.0</td> <td>x20.0</td> </tr>
-          <tr> <td>⭐ Ulduz</td> <td>x5.0</td> <td>x20.0</td> <td>x100.0</td> </tr>
-          <tr> <td>🍇 Gavalı</td> <td>x0.4</td> <td>x1.6</td> <td>x8.0</td> </tr>
-          <tr> <td>🍉 Qarpız</td> <td>x0.2</td> <td>x0.8</td> <td>x4.0</td> </tr>
-          <tr> <td>🍋 Limon</td> <td>x0.1</td> <td>x0.4</td> <td>x2.0</td> </tr>
-          <tr> <td>🍊 Portağal</td> <td>x0.1</td> <td>x0.4</td> <td>x2.0</td> </tr>
-          <tr> <td>🍒 Albalı</td> <td>x0.1</td> <td>x0.4</td> <td>x2.0</td> </tr>
-        </table>
-        <p>• Oyun sahəsində 4 sıra və 5 sütun olmaqla 20 simvol görünür.</p>
-        <p>• Ən soldakı sütundan başlayaraq eyni simvollar ardıcıl gəldikdə uduş hesablanır.</p>
-      </div>
-    </div>
+  <!-- FOOTER BALANCE -->
+  <div class="footer-bar">
+    <div>BALANS: <span class="val-highlight" id="balanceDisplay">100.00 AZN</span></div>
+    <div>BİLET: <span class="val-highlight">1.00 AZN</span></div>
   </div>
 
   <script>
     const tg = window.Telegram?.WebApp;
     if(tg) { tg.expand(); tg.ready(); }
 
-    // Firebase konfiqurasiyası
+    // Firebase İnteqrasiyası
     const firebaseConfig = { databaseURL: "https://sunkazino-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -228,11 +159,12 @@
     const userId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : 'demo_user';
 
     let balance = 100.00;
-    let currentBet = 1.00;
-    let autoSpinsLeft = 0;
-    let isSpinning = false;
+    const ticketPrice = 1.00;
+    let cardValues = [];
+    let revealedCount = 0;
+    let isGameActive = false;
 
-    // Balansı Firebase-dən dinləyirik
+    // Firebase-dən Balans Dinləmə
     db.ref(`users/${userId}/balance`).on('value', (snapshot) => {
       const val = snapshot.val();
       if (val !== null && val !== undefined) {
@@ -245,109 +177,150 @@
       db.ref(`users/${userId}/balance`).set(newBal);
     }
 
-    const symbols = ['🍒', '🍊', '🍋', '🍇', '🍉', '⭐', '7️⃣', '🌟'];
+    function updateUI() {
+      document.getElementById('balanceDisplay').innerText = balance.toFixed(2) + " AZN";
+    }
 
-    // Initial 20 grid cell generation
-    const gridEl = document.getElementById('slotGrid');
-    function initGrid() {
+    // Bilet Qutularını İnitializasiya etmək
+    const gridEl = document.getElementById('scratchGrid');
+    
+    function initEmptyGrid() {
       gridEl.innerHTML = '';
-      for(let i=0; i<20; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'slot-cell';
-        cell.id = `cell_${i}`;
-        cell.innerText = symbols[Math.floor(Math.random() * (symbols.length - 1))];
-        gridEl.appendChild(cell);
+      for(let i=0; i<9; i++) {
+        const box = document.createElement('div');
+        box.className = 'scratch-box';
+        box.innerHTML = `
+          <span>?</span>
+          <div class="cover-layer">👑</div>
+        `;
+        gridEl.appendChild(box);
       }
     }
-    initGrid();
+    initEmptyGrid();
 
-    function updateUI() {
-      document.getElementById('balanceDisplay').innerText = balance.toFixed(2);
-      document.getElementById('betDisplay').innerText = currentBet.toFixed(2);
-    }
-
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-    function selectBet(val) {
-      currentBet = val;
-      document.querySelectorAll('.bet-opt-btn').forEach(b => {
-        b.classList.toggle('active', parseFloat(b.innerText) === val);
-      });
-      updateUI();
-      closeModal('betModal');
-    }
-
-    function handleSpin() {
-      if (isSpinning) return;
-      if (balance < currentBet) {
-        alert('Balansınız kifayət etmir!');
-        autoSpinsLeft = 0;
+    // Bilet Alınması Mexanikası
+    function buyTicket() {
+      if (balance < ticketPrice) {
+        alert("Balansınızda kifayət qədər vəsait yoxdur!");
         return;
       }
 
-      balance -= currentBet;
+      balance -= ticketPrice;
       saveBalance(balance);
       updateUI();
 
-      isSpinning = true;
-      document.getElementById('lastWin').innerText = "0.00";
+      document.getElementById('winDisplay').innerText = "0.00 AZN";
+      document.getElementById('buyBtn').disabled = true;
+      document.getElementById('revealBtn').disabled = false;
+      
+      isGameActive = true;
+      revealedCount = 0;
 
-      let count = 0;
-      const spinInterval = setInterval(() => {
-        for(let i=0; i<20; i++) {
-          const cell = document.getElementById(`cell_${i}`);
-          cell.classList.remove('gold-bg');
-          const randomSym = symbols[Math.floor(Math.random() * symbols.length)];
-          cell.innerText = randomSym;
-        }
-        count++;
-
-        if (count > 12) {
-          clearInterval(spinInterval);
-          calculateWin();
-          isSpinning = false;
-
-          if (autoSpinsLeft > 0) {
-            autoSpinsLeft--;
-            setTimeout(handleSpin, 600);
-          }
-        }
-      }, 60);
+      generateCardValues();
+      renderCard();
     }
 
-    function calculateWin() {
-      let winAmount = 0;
-      const currentGrid = [];
-      for(let i=0; i<20; i++) {
-        currentGrid.push(document.getElementById(`cell_${i}`).innerText);
-      }
-
-      // Şans Alqoritmi (RTP Məhdudiyyəti)
-      const isWinRound = Math.random() < 0.30; // 30% uduş şansı
+    // Uduş ehtimallarının və xanaların formalaşdırılması
+    function generateCardValues() {
+      const possibleValues = [0.5, 1.0, 2.0, 5.0, 10.0, 50.0, 100.0];
+      const isWinRound = Math.random() < 0.35; // %35 şansla uduş
 
       if (isWinRound) {
-        const multipliers = [1.5, 2.0, 3.5, 5.0, 10.0];
-        const mult = multipliers[Math.floor(Math.random() * multipliers.length)];
-        winAmount = currentBet * mult;
+        // Uduşlu bilet: 1 eyni məbləğdən 3 ədəd yerləşdirilir
+        const winVal = possibleValues[Math.floor(Math.random() * 4)]; // 0.5-dən 5 AZN-ə qədər uduşlar
+        cardValues = [winVal, winVal, winVal];
         
-        balance += winAmount;
-        saveBalance(balance);
-        document.getElementById('lastWin').innerText = winAmount.toFixed(2);
+        while(cardValues.length < 9) {
+          const randVal = possibleValues[Math.floor(Math.random() * possibleValues.length)];
+          // Məbləğin 3 dəfə təkrarlanmaması üçün yoxlanış
+          if(cardValues.filter(v => v === randVal).length < 2) {
+            cardValues.push(randVal);
+          }
+        }
       } else {
-        document.getElementById('lastWin').innerText = "0.00";
+        // Uduşsuz bilet: Heç bir məbləğ 3 dəfə təkrar olunmur
+        cardValues = [];
+        while(cardValues.length < 9) {
+          const randVal = possibleValues[Math.floor(Math.random() * possibleValues.length)];
+          if(cardValues.filter(v => v === randVal).length < 2) {
+            cardValues.push(randVal);
+          }
+        }
       }
 
-      // Təsadüfi Cekpot Rəqəmlərinin Dəyişməsi (Dinamik effekti üçün)
-      let meqa = parseFloat(document.getElementById('jpMeqa').innerText.replace(/,/g, ''));
-      meqa += Math.random() * 0.05;
-      document.getElementById('jpMeqa').innerText = meqa.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      // Xanaların yerini qarışdırırıq
+      cardValues.sort(() => Math.random() - 0.5);
     }
 
-    function startAutoSpins(count) {
-      autoSpinsLeft = count;
-      closeModal('autoModal');
-      handleSpin();
+    function renderCard() {
+      gridEl.innerHTML = '';
+      cardValues.forEach((val, idx) => {
+        const box = document.createElement('div');
+        box.className = 'scratch-box';
+        box.dataset.index = idx;
+        box.innerHTML = `
+          <span>${val.toFixed(2)} ₼</span>
+          <div class="cover-layer">👑</div>
+        `;
+        box.onclick = () => revealBox(box, val);
+        gridEl.appendChild(box);
+      });
+    }
+
+    function revealBox(box, val) {
+      if (!isGameActive || box.classList.contains('revealed')) return;
+
+      box.classList.add('revealed');
+      revealedCount++;
+
+      if (revealedCount === 9) {
+        checkResult();
+      }
+    }
+
+    function revealAll() {
+      if (!isGameActive) return;
+      const boxes = document.querySelectorAll('.scratch-box');
+      boxes.forEach(box => {
+        box.classList.add('revealed');
+      });
+      revealedCount = 9;
+      checkResult();
+    }
+
+    function checkResult() {
+      isGameActive = false;
+      document.getElementById('buyBtn').disabled = false;
+      document.getElementById('revealBtn').disabled = true;
+
+      // 3 eyni məbləğin olub-olmaması yoxlanılır
+      const counts = {};
+      let winningValue = 0;
+
+      cardValues.forEach(val => {
+        counts[val] = (counts[val] || 0) + 1;
+        if (counts[val] === 3) {
+          winningValue = val;
+        }
+      });
+
+      if (winningValue > 0) {
+        balance += winningValue;
+        saveBalance(balance);
+        updateUI();
+
+        document.getElementById('winDisplay').innerText = winningValue.toFixed(2) + " AZN";
+
+        // Uduşlu xanaları yaşıl işıqlandırmaq
+        const boxes = document.querySelectorAll('.scratch-box');
+        cardValues.forEach((val, idx) => {
+          if (val === winningValue) {
+            boxes[idx].classList.add('winner');
+          }
+        });
+      } else {
+        document.getElementById('winDisplay').innerText = "0.00 AZN";
+      }
     }
   </script>
 </body>
