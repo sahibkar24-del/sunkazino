@@ -3,151 +3,159 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sun Kazino - Qızıl 100</title>
+  <title>SUN KAZINO - Official Platform</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     :root {
-      --bg-dark: #080314;
-      --card-bg: #150933;
-      --gold-main: #ffd700;
-      --gold-dark: #b8860b;
-      --cyan-neon: #00f0ff;
+      --bg-dark: #05020a;
+      --card-bg: #0d071b;
+      --accent-gold: #ffd700;
+      --gold-gradient: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+      --accent-green: #00ff66;
+      --accent-blue: #00f0ff;
+      --border-purple: #231145;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
-    body { background: var(--bg-dark); color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; overflow-x: hidden; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; user-select: none; }
+    body { background: var(--bg-dark); color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 20px; overflow-x: hidden; }
 
-    /* HEADER */
-    .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #23124a; }
-    .logo { font-size: 20px; font-weight: 900; color: var(--gold-main); text-transform: uppercase; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-    .provider { font-size: 10px; color: #8c73c7; background: #1a0b3b; padding: 3px 8px; border-radius: 6px; border: 1px solid #3d227c; }
+    /* HEADER & CASHIER BAR */
+    .top-header { width: 100%; max-width: 440px; background: #0a0414; padding: 12px 15px; border-bottom: 2px solid var(--border-purple); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+    .brand-logo { font-size: 20px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 10px rgba(255,215,0,0.4); letter-spacing: 1px; }
+    
+    .cashier-box { display: flex; align-items: center; gap: 8px; }
+    .balance-badge { background: #15092e; border: 1px solid var(--border-purple); padding: 6px 12px; border-radius: 20px; text-align: right; }
+    .balance-title { font-size: 9px; color: #8c7ab3; font-weight: bold; }
+    .balance-val { font-size: 14px; font-weight: 900; color: var(--accent-gold); }
 
-    /* GAME TITLE & JACKPOT */
-    .title-card { width: 100%; max-width: 400px; background: linear-gradient(180deg, #2a115c, #13072b); border: 2px solid var(--gold-main); border-radius: 12px; padding: 12px; text-align: center; margin: 12px 0; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
-    .game-name { font-size: 26px; font-weight: 900; color: #fff; text-shadow: 0 0 8px var(--cyan-neon); letter-spacing: 1px; }
-    .top-prize { font-size: 13px; color: var(--gold-main); margin-top: 4px; font-weight: bold; }
+    .deposit-btn { background: var(--gold-gradient); color: #000; font-weight: 900; font-size: 12px; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); text-transform: uppercase; text-decoration: none; display: inline-block; }
+    .deposit-btn:active { transform: scale(0.95); }
 
-    /* SCRATCH CARD CONTAINER (3x3) */
-    .scratch-card { width: 100%; max-width: 400px; background: #13072b; border: 2px solid #361b78; border-radius: 16px; padding: 15px; box-shadow: inset 0 0 20px #000; }
-    .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+    /* NAVIGATION TABS */
+    .nav-tabs { width: 100%; max-width: 440px; display: flex; background: #0c051a; border-bottom: 1px solid var(--border-purple); margin-bottom: 10px; }
+    .tab-btn { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 800; color: #72629b; border: none; background: transparent; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; }
+    .tab-btn.active { color: #fff; border-bottom-color: var(--accent-gold); background: rgba(255,215,0,0.05); }
 
-    .scratch-box {
-      aspect-ratio: 1;
-      background: radial-gradient(circle, #2d1663 0%, #150933 100%);
-      border: 2px solid #4a279c;
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 900;
-      color: var(--gold-main);
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s;
-    }
-    .scratch-box:active { transform: scale(0.96); }
+    /* CONTAINER FOR GAMES */
+    .game-container { width: 100%; max-width: 440px; padding: 0 10px; }
+    .game-view { display: none; }
+    .game-view.active { display: block; }
 
-    /* COVER LAYER */
-    .cover-layer {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #000;
-      font-size: 22px;
-      font-weight: 900;
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      box-shadow: inset 0 0 10px rgba(255,255,255,0.6);
-    }
+    /* GAME 1: QIZIL 40 SLOT */
+    .jackpot-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 10px; }
+    .jp-box { background: #0d071b; border: 1px solid var(--border-purple); border-radius: 8px; padding: 6px; text-align: center; }
+    .jp-title { font-size: 10px; font-weight: 900; }
+    .jp-val { font-size: 14px; font-weight: 800; color: #fff; }
 
-    .scratch-box.revealed .cover-layer {
-      opacity: 0;
-      pointer-events: none;
-      transform: scale(0.8);
-    }
+    .slot-frame { background: #080312; border: 2px solid var(--border-purple); border-radius: 12px; padding: 6px; box-shadow: inset 0 0 15px #000; }
+    .slot-grid-5x4 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .slot-cell { aspect-ratio: 0.85; background: radial-gradient(circle, #1a0f3a 0%, #080312 100%); border: 1px solid #281854; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 24px; text-shadow: 0 2px 4px #000; }
 
-    .scratch-box.winner {
-      border-color: #00ff66;
-      background: radial-gradient(circle, #005c21 0%, #092b13 100%);
-      box-shadow: 0 0 12px #00ff66;
-    }
+    /* GAME 2: QIZIL 100 E-POZ */
+    .scratch-card-box { background: #0c051a; border: 2px solid #2d165c; border-radius: 16px; padding: 15px; }
+    .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .scratch-cell { aspect-ratio: 1; background: #170a36; border: 2px solid #3d1c80; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; color: var(--accent-gold); position: relative; cursor: pointer; overflow: hidden; }
+    .scratch-cover { position: absolute; top:0; left:0; width:100%; height:100%; background: var(--gold-gradient); display: flex; align-items: center; justify-content: center; color: #000; font-size: 22px; font-weight: 900; transition: 0.3s; }
+    .scratch-cell.revealed .scratch-cover { opacity: 0; pointer-events: none; transform: scale(0.8); }
+    .scratch-cell.winner { border-color: var(--accent-green); background: #003b15; box-shadow: 0 0 10px var(--accent-green); }
 
-    /* WIN & ACTION DISPLAY */
-    .win-box { margin: 15px 0; text-align: center; }
-    .win-title { font-size: 11px; color: #a18cd1; text-transform: uppercase; font-weight: bold; }
-    .win-val { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 0 10px var(--gold-main); }
+    /* GENERAL CONTROLS */
+    .controls-panel { margin-top: 12px; background: #0a0414; border: 1px solid var(--border-purple); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .action-main-btn { background: var(--gold-gradient); border: none; border-radius: 30px; color: #000; font-size: 16px; font-weight: 900; padding: 12px 30px; cursor: pointer; box-shadow: 0 0 15px rgba(255,215,0,0.5); text-transform: uppercase; }
+    .action-main-btn:active { transform: scale(0.95); }
+    .action-main-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* CONTROLS */
-    .actions-bar { width: 100%; max-width: 400px; display: flex; gap: 10px; margin-bottom: 15px; }
-    .btn-action {
-      flex: 1;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      font-size: 14px;
-      font-weight: 900;
-      text-transform: uppercase;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-    .btn-buy { background: linear-gradient(180deg, #00f0ff, #0066ff); color: #000; }
-    .btn-reveal { background: linear-gradient(180deg, #ffd700, #b8860b); color: #000; }
-    .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* BOTTOM STATUS */
-    .footer-bar { width: 100%; max-width: 400px; display: flex; justify-content: space-between; background: #13072b; padding: 12px 16px; border-radius: 10px; border: 1px solid #2d1663; font-size: 13px; font-weight: bold; }
-    .val-highlight { color: var(--gold-main); font-size: 15px; }
+    /* TELEGRAM DEPOSIT BANNER FOOTER */
+    .bot-deposit-card { width: 100%; max-width: 440px; margin-top: 15px; background: linear-gradient(180deg, #160a33, #090317); border: 1.5px dashed var(--accent-blue); border-radius: 12px; padding: 12px; text-align: center; }
+    .bot-deposit-title { font-size: 13px; font-weight: bold; color: var(--accent-blue); margin-bottom: 4px; }
+    .bot-deposit-sub { font-size: 11px; color: #a192c4; margin-bottom: 10px; }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="logo">SUN KAZİNO</div>
-    <div class="provider">QUAD SEVEN</div>
-  </div>
-
-  <!-- TITLE BANNER -->
-  <div class="title-card">
-    <div class="game-name">QIZIL 100</div>
-    <div class="top-prize">MÜŞABİH 3 MƏBLƏĞİ TAP - UDUŞU QAZAN!</div>
-  </div>
-
-  <!-- E-POZ CARD (3x3 GRID) -->
-  <div class="scratch-card">
-    <div class="grid-3x3" id="scratchGrid">
-      <!-- 9 Xanalar JS vasitəsilə doldurulur -->
+  <!-- TOP HEADER / BALANCE BAR -->
+  <div class="top-header">
+    <div class="brand-logo">SUN KAZİNO</div>
+    <div class="cashier-box">
+      <div class="balance-badge">
+        <div class="balance-title">BALANS</div>
+        <div class="balance-val" id="globalBalance">0.00 AZN</div>
+      </div>
+      <!-- BOTA YÖNLƏNDİRƏN DEPOZİT DÜYMƏSİ -->
+      <a href="https://t.me/SizinCasinoDepozitBot" target="_blank" class="deposit-btn">+ DEPOZİT</a>
     </div>
   </div>
 
-  <!-- WIN AMOUNT -->
-  <div class="win-box">
-    <div class="win-title">SON UDUŞ</div>
-    <div class="win-val" id="winDisplay">0.00 AZN</div>
+  <!-- CATEGORY TABS -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('slotView', this)">🎰 QIZIL 40 (SLOT)</button>
+    <button class="tab-btn" onclick="switchTab('scratchView', this)">🎫 QIZIL 100 (E-POZ)</button>
   </div>
 
-  <!-- ACTION BUTTONS -->
-  <div class="actions-bar">
-    <button class="btn-action btn-buy" id="buyBtn" onclick="buyTicket()">BİLET AL (1 AZN)</button>
-    <button class="btn-action btn-reveal" id="revealBtn" onclick="revealAll()" disabled>HAMISINI AÇ</button>
-  </div>
+  <div class="game-container">
+    
+    <!-- VIEW 1: QIZIL 40 SLOT GAME -->
+    <div id="slotView" class="game-view active">
+      <div class="jackpot-grid">
+        <div class="jp-box" style="border-color:#ff2a2a;"><div class="jp-title" style="color:#ff2a2a">MEQA</div><div class="jp-val" id="jpMeqa">1,442,654.92</div></div>
+        <div class="jp-box" style="border-color:#00ff44;"><div class="jp-title" style="color:#00ff44">BÖYÜK</div><div class="jp-val">24,500.00</div></div>
+      </div>
 
-  <!-- FOOTER BALANCE -->
-  <div class="footer-bar">
-    <div>BALANS: <span class="val-highlight" id="balanceDisplay">100.00 AZN</span></div>
-    <div>BİLET: <span class="val-highlight">1.00 AZN</span></div>
+      <div class="slot-frame">
+        <div class="slot-grid-5x4" id="slotGrid">
+          <!-- 20 Slot cells -->
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <div>
+          <div style="font-size:10px; color:#7866a0; font-weight:bold;">MƏRC MƏBLƏĞİ</div>
+          <select id="slotBetSelect" style="background:#180b38; color:#fff; border:1px solid #3b1f80; padding:5px; border-radius:6px; font-weight:bold;">
+            <option value="0.20">0.20 AZN</option>
+            <option value="0.50">0.50 AZN</option>
+            <option value="1.00" selected>1.00 AZN</option>
+            <option value="2.00">2.00 AZN</option>
+            <option value="5.00">5.00 AZN</option>
+          </select>
+        </div>
+        <button class="action-main-btn" id="slotSpinBtn" onclick="spinSlot()">FIRLAT ↻</button>
+      </div>
+    </div>
+
+    <!-- VIEW 2: QIZIL 100 SCRATCH GAME -->
+    <div id="scratchView" class="game-view">
+      <div class="scratch-card-box">
+        <div style="text-align:center; font-size:14px; font-weight:900; color:var(--accent-gold); margin-bottom:10px;">
+          EYNİ 3 MƏBLƏĞİ TAP VƏ QAZAN!
+        </div>
+        <div class="grid-3x3" id="scratchGrid">
+          <!-- 9 Scratch cells -->
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <div>
+          <div style="font-size:10px; color:#7866a0; font-weight:bold;">BİLET QİYMƏTİ</div>
+          <div style="font-size:15px; font-weight:900; color:#fff;">1.00 AZN</div>
+        </div>
+        <button class="action-main-btn" id="buyScratchBtn" onclick="buyScratchCard()">BİLET AL 🎫</button>
+      </div>
+    </div>
+
+    <!-- TELEGRAM BOT DEPOSIT & WITHDRAWAL NOTICE -->
+    <div class="bot-deposit-card">
+      <div class="bot-deposit-title">🤖 7/24 AVTOMATİK DEPOZİT VƏ ÇIXARIŞ</div>
+      <div class="bot-deposit-sub">Balansınızı artırmaq və ya uduşu kartınıza çəkmək üçün rəsmi Telegram bota müraciət edin.</div>
+      <a href="https://t.me/SizinCasinoDepozitBot" target="_blank" class="deposit-btn" style="background:#00f0ff; width:100%;">BOTA KEÇİD ET (@SizinCasinoBot)</a>
+    </div>
+
   </div>
 
   <script>
+    // Telegram WebApp Setup
     const tg = window.Telegram?.WebApp;
     if(tg) { tg.expand(); tg.ready(); }
 
@@ -159,167 +167,156 @@
     const userId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : 'demo_user';
 
     let balance = 100.00;
-    const ticketPrice = 1.00;
-    let cardValues = [];
-    let revealedCount = 0;
-    let isGameActive = false;
+    let isSpinning = false;
 
     // Firebase-dən Balans Dinləmə
     db.ref(`users/${userId}/balance`).on('value', (snapshot) => {
       const val = snapshot.val();
       if (val !== null && val !== undefined) {
         balance = parseFloat(val);
-        updateUI();
+      } else {
+        db.ref(`users/${userId}/balance`).set(100.00); // İlk istifadəçi üçün demo balans
       }
+      updateBalanceUI();
     });
 
     function saveBalance(newBal) {
       db.ref(`users/${userId}/balance`).set(newBal);
     }
 
-    function updateUI() {
-      document.getElementById('balanceDisplay').innerText = balance.toFixed(2) + " AZN";
+    function updateBalanceUI() {
+      document.getElementById('globalBalance').innerText = balance.toFixed(2) + " AZN";
     }
 
-    // Bilet Qutularını İnitializasiya etmək
-    const gridEl = document.getElementById('scratchGrid');
-    
-    function initEmptyGrid() {
-      gridEl.innerHTML = '';
-      for(let i=0; i<9; i++) {
-        const box = document.createElement('div');
-        box.className = 'scratch-box';
-        box.innerHTML = `
-          <span>?</span>
-          <div class="cover-layer">👑</div>
-        `;
-        gridEl.appendChild(box);
+    // TAB SWITCHER
+    function switchTab(viewId, btn) {
+      document.querySelectorAll('.game-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    /* --- GAME 1: QIZIL 40 SLOT LOGIC --- */
+    const slotSymbols = ['🍒', '🍊', '🍋', '🍇', '🍉', '⭐', '7️⃣', '🌟'];
+    const slotGridEl = document.getElementById('slotGrid');
+
+    function initSlotGrid() {
+      slotGridEl.innerHTML = '';
+      for(let i=0; i<20; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'slot-cell';
+        cell.id = `slot_${i}`;
+        cell.innerText = slotSymbols[Math.floor(Math.random() * (slotSymbols.length - 1))];
+        slotGridEl.appendChild(cell);
       }
     }
-    initEmptyGrid();
+    initSlotGrid();
 
-    // Bilet Alınması Mexanikası
-    function buyTicket() {
-      if (balance < ticketPrice) {
-        alert("Balansınızda kifayət qədər vəsait yoxdur!");
+    function spinSlot() {
+      if(isSpinning) return;
+      const bet = parseFloat(document.getElementById('slotBetSelect').value);
+      
+      if(balance < bet) {
+        alert("Balansınız kifayət etmir! Lütfən bota yazaraq depozit edin.");
         return;
       }
 
-      balance -= ticketPrice;
+      balance -= bet;
       saveBalance(balance);
-      updateUI();
+      isSpinning = true;
 
-      document.getElementById('winDisplay').innerText = "0.00 AZN";
-      document.getElementById('buyBtn').disabled = true;
-      document.getElementById('revealBtn').disabled = false;
+      let count = 0;
+      const interval = setInterval(() => {
+        for(let i=0; i<20; i++) {
+          document.getElementById(`slot_${i}`).innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+        }
+        count++;
+        if(count > 10) {
+          clearInterval(interval);
+          isSpinning = false;
+          
+          // %30 Şansla uduş
+          if(Math.random() < 0.30) {
+            const win = bet * (Math.floor(Math.random() * 4) + 2);
+            balance += win;
+            saveBalance(balance);
+            alert(`TƏBRİKLƏR! Siz ${win.toFixed(2)} AZN qazandınız!`);
+          }
+        }
+      }, 70);
+    }
+
+    /* --- GAME 2: QIZIL 100 E-POZ LOGIC --- */
+    const scratchGridEl = document.getElementById('scratchGrid');
+    let scratchValues = [];
+    let revealedCells = 0;
+    let scratchActive = false;
+
+    function initEmptyScratch() {
+      scratchGridEl.innerHTML = '';
+      for(let i=0; i<9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'scratch-cell';
+        cell.innerHTML = `<span>?</span><div class="scratch-cover">👑</div>`;
+        scratchGridEl.appendChild(cell);
+      }
+    }
+    initEmptyScratch();
+
+    function buyScratchCard() {
+      if(balance < 1.00) {
+        alert("Balansınız kifayət etmir! Lütfən bota yazaraq depozit edin.");
+        return;
+      }
+
+      balance -= 1.00;
+      saveBalance(balance);
+
+      scratchActive = true;
+      revealedCells = 0;
       
-      isGameActive = true;
-      revealedCount = 0;
-
-      generateCardValues();
-      renderCard();
-    }
-
-    // Uduş ehtimallarının və xanaların formalaşdırılması
-    function generateCardValues() {
-      const possibleValues = [0.5, 1.0, 2.0, 5.0, 10.0, 50.0, 100.0];
-      const isWinRound = Math.random() < 0.35; // %35 şansla uduş
-
-      if (isWinRound) {
-        // Uduşlu bilet: 1 eyni məbləğdən 3 ədəd yerləşdirilir
-        const winVal = possibleValues[Math.floor(Math.random() * 4)]; // 0.5-dən 5 AZN-ə qədər uduşlar
-        cardValues = [winVal, winVal, winVal];
-        
-        while(cardValues.length < 9) {
-          const randVal = possibleValues[Math.floor(Math.random() * possibleValues.length)];
-          // Məbləğin 3 dəfə təkrarlanmaması üçün yoxlanış
-          if(cardValues.filter(v => v === randVal).length < 2) {
-            cardValues.push(randVal);
-          }
-        }
+      // Məbləğlərin generasiyası
+      const possible = [0.5, 1.0, 2.0, 5.0, 10.0, 50.0];
+      const isWin = Math.random() < 0.35;
+      
+      if(isWin) {
+        const winVal = possible[Math.floor(Math.random() * 3)];
+        scratchValues = [winVal, winVal, winVal];
+        while(scratchValues.length < 9) scratchValues.push(possible[Math.floor(Math.random() * possible.length)]);
       } else {
-        // Uduşsuz bilet: Heç bir məbləğ 3 dəfə təkrar olunmur
-        cardValues = [];
-        while(cardValues.length < 9) {
-          const randVal = possibleValues[Math.floor(Math.random() * possibleValues.length)];
-          if(cardValues.filter(v => v === randVal).length < 2) {
-            cardValues.push(randVal);
-          }
-        }
+        scratchValues = [0.5, 1.0, 2.0, 5.0, 0.5, 1.0, 2.0, 5.0, 10.0];
       }
+      scratchValues.sort(() => Math.random() - 0.5);
 
-      // Xanaların yerini qarışdırırıq
-      cardValues.sort(() => Math.random() - 0.5);
-    }
-
-    function renderCard() {
-      gridEl.innerHTML = '';
-      cardValues.forEach((val, idx) => {
-        const box = document.createElement('div');
-        box.className = 'scratch-box';
-        box.dataset.index = idx;
-        box.innerHTML = `
-          <span>${val.toFixed(2)} ₼</span>
-          <div class="cover-layer">👑</div>
-        `;
-        box.onclick = () => revealBox(box, val);
-        gridEl.appendChild(box);
+      // Render
+      scratchGridEl.innerHTML = '';
+      scratchValues.forEach((val, idx) => {
+        const cell = document.createElement('div');
+        cell.className = 'scratch-cell';
+        cell.innerHTML = `<span>${val.toFixed(2)} ₼</span><div class="scratch-cover">👑</div>`;
+        cell.onclick = () => {
+          if(!scratchActive || cell.classList.contains('revealed')) return;
+          cell.classList.add('revealed');
+          revealedCells++;
+          if(revealedCells === 9) checkScratchWin();
+        };
+        scratchGridEl.appendChild(cell);
       });
     }
 
-    function revealBox(box, val) {
-      if (!isGameActive || box.classList.contains('revealed')) return;
-
-      box.classList.add('revealed');
-      revealedCount++;
-
-      if (revealedCount === 9) {
-        checkResult();
-      }
-    }
-
-    function revealAll() {
-      if (!isGameActive) return;
-      const boxes = document.querySelectorAll('.scratch-box');
-      boxes.forEach(box => {
-        box.classList.add('revealed');
-      });
-      revealedCount = 9;
-      checkResult();
-    }
-
-    function checkResult() {
-      isGameActive = false;
-      document.getElementById('buyBtn').disabled = false;
-      document.getElementById('revealBtn').disabled = true;
-
-      // 3 eyni məbləğin olub-olmaması yoxlanılır
+    function checkScratchWin() {
+      scratchActive = false;
       const counts = {};
-      let winningValue = 0;
-
-      cardValues.forEach(val => {
-        counts[val] = (counts[val] || 0) + 1;
-        if (counts[val] === 3) {
-          winningValue = val;
-        }
+      let winAmt = 0;
+      scratchValues.forEach(v => {
+        counts[v] = (counts[v] || 0) + 1;
+        if(counts[v] === 3) winAmt = v;
       });
 
-      if (winningValue > 0) {
-        balance += winningValue;
+      if(winAmt > 0) {
+        balance += winAmt;
         saveBalance(balance);
-        updateUI();
-
-        document.getElementById('winDisplay').innerText = winningValue.toFixed(2) + " AZN";
-
-        // Uduşlu xanaları yaşıl işıqlandırmaq
-        const boxes = document.querySelectorAll('.scratch-box');
-        cardValues.forEach((val, idx) => {
-          if (val === winningValue) {
-            boxes[idx].classList.add('winner');
-          }
-        });
-      } else {
-        document.getElementById('winDisplay').innerText = "0.00 AZN";
+        alert(`TƏBRİKLƏR! Eyni 3 məbləğ tapıldı: +${winAmt.toFixed(2)} AZN!`);
       }
     }
   </script>
